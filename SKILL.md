@@ -316,7 +316,25 @@ Design the full tracking plan using the 7-step sequence below, then implement in
 
 **Vertical-specific event examples** are in `reference.md § Phase 4 — Vertical-Specific Event Examples`.
 
+**When adding events to an existing project** (extending the tracking plan or Focused Remediation): Before designing new events, check existing schema — see `reference.md § Phase 4 — Adding Events to an Existing Project`. Reuse event and property names where a similar event or property already exists; match established naming conventions and enum-like values.
+
 **The tracking plan must be reviewed and signed off by product, engineering, and analytics before implementation begins.**
+
+**Optional spec-first step (recommended before implementing each new event):** For each event (or next batch), you can write a short spec for quick sign-off before writing code. Offer: "I can either (A) write a spec first — event name, trigger, properties, and types for your review — or (B) go straight to code. Option A is recommended so we catch naming or typing issues early." If the customer chooses A, use this format and checklist:
+
+**Spec format:**
+```
+Event: <Name>
+Trigger: <Exact condition — e.g. "user clicks Submit on /checkout">
+Properties:
+  - <property_name> (string|number|boolean) — <what it represents>
+  - ...
+Reused from existing schema: <list any properties being reused>
+New properties: <list any net-new properties>
+Owner: <team or email>
+```
+
+**Spec checklist before finalizing:** Name matches project convention; name is past tense and specific; no dynamic values in the event name (use a property instead); no PII in properties; property names are `snake_case` and match existing names where possible; required properties will always be present on every call.
 
 **Output of this phase:** Signed-off tracking plan with at minimum `sign_up_completed` and the Value Moment fully specified (name, trigger, properties). Required before Phase 5.
 
@@ -361,9 +379,13 @@ Each SDK section in reference.md covers the full lifecycle: install → init →
 - Event tracking calls → inside the exact controller, handler, or component functions where the action occurs
 - Environment token switching → use the existing env config pattern already present in the codebase
 
+Place each `track()` call as close to the triggering action as possible — in the event handler, form submit callback, or API endpoint that represents the action.
+
 **Server-side:** Forward client IP (`ip`) only when policy and consent rules permit geolocation enrichment. Always set `$insert_id` for deduplication. Parse User-Agent manually for `$browser`, `$os`, `$device`.
 
 **QA gate — verify before proceeding to Phase 6:** Ask the customer to deploy their current changes to the dev environment, open Mixpanel Live View (mixpanel.com → dev project → Live View), and confirm at least one event appears. Do not proceed to identity management until basic event ingestion is confirmed working. Debugging initialization and identity at the same time makes root-cause analysis very difficult.
+
+**Post-deploy verification (after each new event or batch):** Beyond Live View, confirm the event appears in Reports for the expected date range (e.g. run a segmentation or Insights query filtered by the event name and today's date). Check that key properties are populating with expected values. Event and property names are case-sensitive — zero results often mean a typo or casing mismatch. See `reference.md § Phase 5 — Post-Deploy Verification` for details.
 
 **Output of this phase:** All tracking and initialization code written and placed in the codebase. At least one event confirmed arriving in Mixpanel Live View. Customer ready to wire up identity calls.
 
@@ -399,6 +421,8 @@ On logout              → mixpanel.reset()
 **Server-side identity:** SDKs do not auto-generate `$device_id`. Store a UUID in a cookie. Pass `$device_id` on every pre-login event. Pass both `$device_id` and `$user_id` on the first post-login event. See `reference.md § Phase 6 — Server-Side Identity Flow` for full Python example.
 
 **Full client-side flow** (signup → logout → re-open) is in `reference.md § Phase 6 — Client-Side Identity Flow`.
+
+**Identity checklist (quick validation):** Before proceeding, confirm: `identify()` was called on login/signup; profile attributes use `people.set()` not `track()`; `identify()` on re-open when already logged in (not every page load); stable unique ID (not email/device). Full checklist and QA: `reference.md § Phase 6`.
 
 **QA before production:** Run the ID Management QA Checklist from `reference.md § Phase 6`.
 
@@ -536,6 +560,10 @@ Get these wrong and the data is permanently corrupted or very expensive to fix.
 - Never use `$` or `mp_` prefixes on custom event or property names
 - Omit properties entirely when they have no applicable value — do not send `null` or `""`
 - Mixpanel is case-sensitive: `checkout_completed` ≠ `Checkout_Completed` — enforce snake_case from day one
+- **One event, one meaning** — do not reuse one event name for two different user actions (e.g. the same "Button Clicked" for nav and checkout); use a specific event per action
+- **Avoid duplicate events** — before creating a new event, check existing events in Lexicon or the project; extend an existing event with a property when possible
+- **Property shape** — prefer flat properties for reporting; avoid nested objects unless the tracking plan explicitly uses list/object types
+- **Server + client** — if the same event can fire from both server and client, ensure consistent `distinct_id`/identity or you will get identity graph issues
 
 **Compliance and privacy:**
 - If consent is required and status is unknown, do not initialize non-essential tracking

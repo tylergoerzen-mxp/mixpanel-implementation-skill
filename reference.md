@@ -547,6 +547,19 @@ if (giftWrapSelected) props.gift_wrap = true;
 mixpanel.track("checkout_completed", props);
 ```
 
+### Adding Events to an Existing Project (Extending the Tracking Plan)
+
+When adding new events to a project that already has tracking (e.g. after greenfield rollout or in Focused Remediation), check existing schema first so new events don't fragment naming or duplicate semantics.
+
+**Before designing a new event:**
+
+1. **Check for similar events** — In Lexicon or the project's event list, search for events that might already represent this action. If a similar event exists, consider extending it with a new property rather than creating a new event (e.g. add `checkout_surface` to `checkout_completed` instead of creating `checkout_completed_mobile`).
+2. **Reuse property names** — Look at properties on related events. If `plan_type`, `payment_method`, or `referral_source` already exist with consistent naming, use those exact names. Do not introduce `planType`, `subscription_type`, or other variants.
+3. **Reuse enum-like values** — For properties that have established value sets (e.g. `plan_type` = "free" | "pro"), match existing values. Check Lexicon or Reports for current property values so new tracking doesn't create duplicate value variants (e.g. "Free" vs "free").
+4. **Match naming conventions** — The project may use a consistent style (e.g. `snake_case` event names, bracket-prefix, or title case). Match whatever convention is already in use so new events don't stand out as inconsistent.
+
+If you have access to tools that query the project (e.g. list events by keyword, list property names for an event, list property values), use them to ground the design. Otherwise, direct the customer to Lexicon and Reports to list existing events and property names for the relevant domain before finalizing the new event spec.
+
 ### Vertical-Specific Event Examples
 
 Use the customer's vertical (from Phase 0) to make recommendations concrete:
@@ -663,9 +676,30 @@ def enrich_event_properties(request, properties):
 
 ### SDK Implementation Guide
 
+Infer the SDK from the project's language and framework. Do not ask the customer — detect from file extensions and dependency files.
+
+| Signal | SDK |
+|--------|-----|
+| `package.json` with `mixpanel-browser` | JavaScript (browser) |
+| `package.json` with `mixpanel` (no `-browser`) | Node.js (server) |
+| `requirements.txt` or `pyproject.toml` with `mixpanel` | Python (server) |
+| `Package.swift` or `.xcodeproj` | iOS (Swift) |
+| `build.gradle` or `AndroidManifest.xml` | Android (Kotlin/Java) |
+| `pubspec.yaml` with `mixpanel` | Flutter |
+| No client project, only server files | Use server SDK for the detected language |
+
 Each subsection below covers the full implementation lifecycle for one SDK: **install → init → track event → super properties → user profile → identify → reset**.
 
 **Token substitution:** When surfacing any code snippet below, replace `'YOUR_PROJECT_TOKEN'` with the real project tokens collected in Phase 2. Use the dev token in dev initialization blocks and the prod token in production initialization blocks. Never output the placeholder literal if real tokens are already in hand.
+
+### Post-Deploy Verification
+
+After deploying a new event (or batch), verify it is flowing correctly beyond a single Live View sighting:
+
+1. **Confirm the event in Reports** — In the dev project, run an Insights or Segmentation report filtered by the exact event name and a date range that includes the deploy (e.g. today). Zero results usually mean the event is not firing, or there is a typo or casing mismatch (Mixpanel event names are case-sensitive).
+2. **Validate property values** — In Lexicon or Reports, check that key properties on the event are populating with expected values. If a property is missing or shows unexpected values, the trigger or property names may be wrong (property names are also case-sensitive).
+
+If you have access to a segmentation or query tool (e.g. Run-Segmentation-Query, Get-Property-Values), use it to confirm event volume and property value distribution. Otherwise, direct the customer to Mixpanel Reports and Lexicon to run these checks.
 
 ---
 
@@ -1416,6 +1450,15 @@ def set_anonymous_id_cookie(response, anon_id):
 | Do not create User Profiles for anonymous users | Wasted profile slots; profiles don't carry over when identity is linked |
 | Always use your database primary key as `$user_id` | Stable, unique, never reassigned |
 
+### Identity Checklist (Quick Validation)
+
+Before moving on, confirm:
+
+- [ ] `identify(userId)` has been called earlier in the session (on login/signup) — not only on the current action
+- [ ] User profile attributes are set via `people.set()` (or equivalent), not via `track()` — event properties describe the action; profile properties describe the user
+- [ ] `identify()` is called once per session when the user is already logged in (e.g. on app re-open), not on every page load without need
+- [ ] The identifier used for `$user_id` is a stable unique ID (e.g. database primary key), not email and not device ID
+
 ### ID Management QA Checklist
 
 Before going to production, verify:
@@ -1474,11 +1517,22 @@ In small teams, one person may hold multiple roles. The critical thing is that t
 
 Navigate to: **Data Management (top nav) → Lexicon**
 
-For every event you ship, immediately add to Lexicon:
+For every event you ship, immediately add to Lexicon using this structured checklist:
 
-1. **Description** — one sentence explaining what triggers the event and what it represents
-2. **Tags** — team or domain tags (e.g., `onboarding`, `payments`, `mobile`)
-3. **Example values** for each property
+**Per event:**
+| Field | Purpose |
+|-------|---------|
+| **Description** | One sentence: what triggers the event and what it represents |
+| **Verified** | Mark as verified once the event has been confirmed in Live View or Reports |
+| **Owner / contact** | Team or email responsible for this event |
+| **Tags** | Team or domain tags (e.g. `onboarding`, `payments`, `mobile`) |
+| **Example property values** | At least one example value for each property (for analyst reference) |
+
+**Per property (for each event):**
+| Field | Purpose |
+|-------|---------|
+| **Description** | What the value represents; if enum-like, list valid values |
+| **Sensitive** | Set to true if the property contains PII or other sensitive data (so it can be restricted in exports or reports) |
 
 Example Lexicon description for `checkout_completed`:
 > "Fires when a user successfully completes a purchase and the order is confirmed. Includes the order total, item count, payment method, and whether this is the user's first purchase. Triggered server-side by the order confirmation webhook."
@@ -1560,6 +1614,10 @@ Schedule a 30-minute review every quarter with your Data Governor and Analyst:
 | No cleanup process | Deprecated events clutter dropdowns and confuse analysts | Schedule quarterly reviews; hide first, then drop |
 | No documentation | New engineers repeat old mistakes; onboarding takes weeks | Store tracking plan in a shared wiki; link it from Mixpanel Boards |
 | Tracking everything | Thousands of event names; 5,000-name limit approached; noise overwhelms signal | Return to tracking plan methodology — only track what ties to a KPI |
+| One event reused for two actions | Same event name (e.g. "Button Clicked") used for nav and checkout → reports conflate different behaviors | One event, one meaning — use a specific event name per distinct user action |
+| Duplicate events | New event created when a similar one already exists → fragmented schema, duplicate reports | Check Lexicon/project for existing events before creating; extend with a property when possible |
+| Nested objects as properties | Complex nested objects hard to query and report on; some tooling expects flat properties | Prefer flat properties; flatten or use list/object types only when explicitly in the tracking plan |
+| Same event from server and client, inconsistent IDs | Events from backend and frontend merge incorrectly or create duplicate users | Ensure consistent `distinct_id`/identity (e.g. same `$user_id` and `$device_id` strategy) across both |
 
 ### Tracking Plan as a Living Document
 
