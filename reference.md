@@ -1,17 +1,193 @@
-# Mixpanel First-Implementation Context Guide
+# Mixpanel Implementation Reference Guide
 
-**Purpose:** This document is consumed by an agent skill that assists new Mixpanel customers in setting up their analytics implementation correctly from day one. The document is structured as a sequential guide. Each phase includes `AGENT PROMPT` callouts that instruct the agent on what to ask, in what order, and how to adapt its guidance based on answers. Do not skip phases — each one builds on the last.
+**Purpose:** This document is consumed by an agent skill that assists Mixpanel customers in setting up or extending their analytics implementation. It provides SDK code snippets, vertical-specific event examples, identity flows, governance guidance, and detailed phase-by-phase reference content.
 
 ---
 
 ## How to Use This Document
 
-Work through the phases in order. Each phase has two sections:
+This document supports all four modes defined in SKILL.md:
 
-1. **AGENT PROMPT** — questions the agent must ask the customer before proceeding.
-2. **Guidance** — the knowledge, best practices, and code snippets to share with the customer, tailored to their answers.
+- **Quick Start mode:** Start with the **Quick Start Reference** section below for minimal SDK snippets (init + track + identify/reset). Skip to Phase 5 SDK sections only if you need advanced configuration.
+- **Full Implementation mode:** Work through the phases in order. Each phase has **AGENT PROMPT** callouts (questions to ask) and **Guidance** (knowledge, best practices, code snippets).
+- **Add Tracking / Audit modes:** Jump to the relevant phase sections as needed.
 
-The agent should be conversational, not mechanical. Ask one or two questions at a time. Acknowledge the customer's answers and reflect them back before moving on. Never surface code until the customer's tech stack has been confirmed in Phase 0.
+The agent should be conversational, not mechanical. Ask one or two questions at a time. Acknowledge the customer's answers and reflect them back before moving on. Never surface code until the customer's tech stack has been confirmed.
+
+---
+
+## Quick Start Reference — Minimal SDK Snippets
+
+Use this section in Quick Start mode to reach working code fast. Each platform has three blocks: **init**, **track**, and **identify/reset**. For the full SDK lifecycle (super properties, user profiles, advanced configuration), see the corresponding section under Phase 5.
+
+### JavaScript (Browser) — Quick Start
+
+```javascript
+// 1. Init — add <script src="https://cdn.mxpnl.com/libs/mixpanel-2-latest.min.js"></script> first
+mixpanel.init('YOUR_PROJECT_TOKEN', { debug: true });
+
+// 2. Track
+mixpanel.track('sign_up_completed', {
+  sign_up_method: 'email',
+  platform: 'web'
+});
+
+// 3. Identity
+mixpanel.identify(user.id);                       // on login/signup
+mixpanel.people.set({ $name: user.name, $email: user.email });
+mixpanel.reset();                                  // on logout
+```
+
+**Consent gate (if EU/CA):**
+```javascript
+mixpanel.init('YOUR_PROJECT_TOKEN', { opt_out_tracking_by_default: true });
+// After user consents:
+mixpanel.opt_in_tracking();
+```
+
+### Python (Server-Side) — Quick Start
+
+```python
+# pip install mixpanel
+from mixpanel import Mixpanel
+mp = Mixpanel('YOUR_PROJECT_TOKEN')
+
+# Track
+mp.track(user_id, 'sign_up_completed', {
+    'sign_up_method': 'email',
+    'platform': 'web',
+    '$insert_id': unique_dedup_key
+})
+
+# Identity — set user profile after signup
+mp.people_set(user_id, {
+    '$name': user.name,
+    '$email': user.email
+})
+```
+
+### Node.js (Server-Side) — Quick Start
+
+```javascript
+// npm install mixpanel
+const Mixpanel = require('mixpanel');
+const mixpanel = Mixpanel.init('YOUR_PROJECT_TOKEN');
+
+// Track
+mixpanel.track('sign_up_completed', {
+  distinct_id: userId,
+  sign_up_method: 'email',
+  platform: 'web',
+  $insert_id: uniqueDedupKey
+});
+
+// Identity — set user profile
+mixpanel.people.set(userId, { $name: user.name, $email: user.email });
+```
+
+### React Native — Quick Start
+
+```javascript
+// npm install mixpanel-react-native
+import { Mixpanel } from 'mixpanel-react-native';
+const mixpanel = new Mixpanel('YOUR_PROJECT_TOKEN', true);
+await mixpanel.init();
+
+// Track
+mixpanel.track('sign_up_completed', { sign_up_method: 'email', platform: 'mobile' });
+
+// Identity
+mixpanel.identify(user.id);
+mixpanel.getPeople().set({ $name: user.name, $email: user.email });
+mixpanel.reset();  // on logout
+```
+
+### iOS (Swift) — Quick Start
+
+```swift
+// Add Mixpanel via SPM or CocoaPods
+import Mixpanel
+Mixpanel.initialize(token: "YOUR_PROJECT_TOKEN", trackAutomaticEvents: true)
+
+// Track
+Mixpanel.mainInstance().track(event: "sign_up_completed", properties: [
+    "sign_up_method": "email",
+    "platform": "ios"
+])
+
+// Identity
+Mixpanel.mainInstance().identify(distinctId: user.id)
+Mixpanel.mainInstance().people.set(properties: ["$name": user.name, "$email": user.email])
+Mixpanel.mainInstance().reset()  // on logout
+```
+
+### Android (Kotlin) — Quick Start
+
+```kotlin
+// implementation 'com.mixpanel.android:mixpanel-android:7.+'
+import com.mixpanel.android.mpmetrics.MixpanelAPI
+val mixpanel = MixpanelAPI.getInstance(context, "YOUR_PROJECT_TOKEN", true)
+
+// Track
+val props = JSONObject()
+props.put("sign_up_method", "email")
+props.put("platform", "android")
+mixpanel.track("sign_up_completed", props)
+
+// Identity
+mixpanel.identify(user.id)
+mixpanel.people.set("\$name", user.name)
+mixpanel.people.set("\$email", user.email)
+mixpanel.reset()  // on logout
+```
+
+### Flutter — Quick Start
+
+```dart
+// mixpanel_flutter: ^2.3.0 in pubspec.yaml
+import 'package:mixpanel_flutter/mixpanel_flutter.dart';
+final mixpanel = await Mixpanel.init('YOUR_PROJECT_TOKEN', trackAutomaticEvents: true);
+
+// Track
+mixpanel.track('sign_up_completed', properties: {
+  'sign_up_method': 'email',
+  'platform': 'flutter'
+});
+
+// Identity
+mixpanel.identify(user.id);
+mixpanel.getPeople().set('\$name', user.name);
+mixpanel.getPeople().set('\$email', user.email);
+mixpanel.reset();  // on logout
+```
+
+### HTTP API — Quick Start
+
+```bash
+# Track
+curl -X POST https://api.mixpanel.com/track \
+  -H 'Content-Type: application/json' \
+  -d '[{
+    "event": "sign_up_completed",
+    "properties": {
+      "token": "YOUR_PROJECT_TOKEN",
+      "distinct_id": "user-123",
+      "time": 1740000000,
+      "$insert_id": "unique-dedup-key",
+      "sign_up_method": "email",
+      "platform": "web"
+    }
+  }]'
+
+# Set user profile
+curl -X POST https://api.mixpanel.com/engage \
+  -H 'Content-Type: application/json' \
+  -d '[{
+    "$token": "YOUR_PROJECT_TOKEN",
+    "$distinct_id": "user-123",
+    "$set": { "$name": "Alice Smith", "$email": "alice@example.com" }
+  }]'
+```
 
 ---
 
