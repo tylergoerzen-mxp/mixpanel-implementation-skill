@@ -23,8 +23,9 @@ This split keeps `SKILL.md` fast to load and easy to reason over. Pushing all SD
 
 ## File Map
 
-- `SKILL.md` — Mode selection (4 modes), Quick Start flow (7 steps), Full Implementation phases (0–7), Add Tracking mode, Audit mode, compliance guardrails, Pre-Flight codebase scan, Context Block schemas (minimal + full), phase exit checklists, communication habits, and critical rules
-- `reference.md` — Quick Start Reference (minimal SDK snippets per platform), full RAE Framework, all SDK code (JS, Python, Node.js, React Native, iOS Swift, Android Kotlin, Flutter, HTTP API), vertical event examples, tracking plan templates, CDP/warehouse integration notes, identity flow walkthroughs, governance pitfalls, and the ID Management QA checklist
+- `SKILL.md` — Mode selection (4 modes), Quick Start flow (7 steps), Full Implementation phases (0–7), Add Tracking mode, Audit mode, compliance guardrails, Pre-Flight codebase scan, Context Block schemas (minimal + full), phase exit checklists, communication habits, critical rules, and Codebase Access Check logic with Developer Handoff Spec generation paths
+- `reference.md` — Quick Start Reference (minimal SDK snippets per platform), full RAE Framework, all SDK code (JS, Python, Node.js, React Native, iOS Swift, Android Kotlin, Flutter, HTTP API), vertical event examples, tracking plan templates, CDP/warehouse integration notes, identity flow walkthroughs, governance pitfalls, ID Management QA checklist, and Developer Handoff Specification Template (for no-codebase-access scenarios)
+- `AGENTS.md.template` — Template for the `AGENTS.md` file that gets created in the customer's codebase during wrap-up. Ensures future AI agents know Mixpanel is the analytics tool, how it's configured, and how to add tracking correctly. The agent fills in actual values (platform, SDK, events, file paths) from the session.
 - `README.md` — This file; for maintainers only
 
 ---
@@ -41,6 +42,17 @@ The skill asks the customer which mode fits their goal before doing anything els
 | **Audit** | Diagnoses current state → produces prioritized fixes → executes fixes via Add Tracking or Full Implementation | Prioritized fix list with severity ranking |
 
 Mode switching is always an offer, never automatic. Quick Start can escalate to Full Implementation if complexity surfaces. Full Implementation can downshift to Quick Start if the customer wants momentum first.
+
+### No Codebase Access Path
+
+Both **Quick Start** and **Full Implementation** modes support a **Developer Handoff Spec** path for when the user doesn't have codebase access:
+
+- Before implementation (Step 5 / Phase 5), the agent asks: *"Do you have access to the codebase right now, or are you gathering specifications for a developer to implement later?"*
+- If gathering specs → generates `MIXPANEL_IMPLEMENTATION_SPEC.md` instead of writing code to files
+- The spec contains: complete copy-paste ready code, business context (Value Moment, KPIs, priority), step-by-step verification guide, troubleshooting section
+- **Target audience:** Human developers (not AI agents like `AGENTS.md`)
+- **Tone:** Explanatory ("You should X because Y") with business impact of mistakes explained
+- **Output:** Quick Start = 2-3 page spec (2-4 hour implementation) / Full Implementation = 10-12 page spec (1-2 day implementation)
 
 ---
 
@@ -68,41 +80,4 @@ These phases apply to Full Implementation mode only. Quick Start uses Live View 
 - **SDK code may lag behind releases.** Mixpanel ships SDK updates independently of this skill. Always check the current SDK changelog when writing production initialization code.
 - **Not legal advice.** The compliance and privacy guardrails in `SKILL.md` are implementation defaults, not legal guidance. Customer policy and counsel are the authoritative source for consent and data residency requirements.
 - **No enforcement mechanism.** The skill guides the agent to gate phases and reject shortcuts, but a customer who overrides the agent can bypass any guardrail. The skill documents the risk, not the enforcement.
-
----
-
-## Maintenance Guide
-
-### When to update `reference.md`
-
-- Mixpanel ships a breaking SDK change (initialization API, `identify`/`reset` signature, ingestion endpoint)
-- A new SDK platform becomes commonly requested (e.g., a new Flutter version, a new React Native architecture)
-- The Simplified ID Merge behavior or the `$device_id` / `$user_id` contract changes
-- A CDP or warehouse integration path changes (Segment schema, Rudderstack SDK, BigQuery connector)
-- Tracking plan templates or vertical event examples become stale relative to common customer patterns
-- Quick Start Reference snippets need to match updated full SDK sections
-
-### When to update `SKILL.md`
-
-- The mode selection, routing logic, or mode switching rules change
-- The Quick Start flow steps need reordering or a step needs to be added/removed
-- The phase sequence for Full Implementation needs reordering or a phase needs to be added/removed
-- A new critical rule emerges from common implementation failures
-- The Context Block schemas (Quick Start or Full) need new fields
-- A compliance or privacy default changes (new regulation, new Mixpanel data residency option)
-- The Pre-Flight codebase scan logic needs to extract different signals
-- Fast-path rules need adjustment (what Quick Start requires vs. defers)
-
-### Staleness signals to watch for
-
-- Customer feedback that a code snippet doesn't match the current SDK
-- A Mixpanel changelog entry that changes a behavior this skill relies on (ID merge, Lexicon API, Data Standards enforcement)
-- A new Mixpanel plan tier that changes which governance features are available
-- Agent-generated identity code that produces ID fragmentation in testing
-
-### How to verify the skill is current
-
-1. Check the [Mixpanel JS SDK changelog](https://github.com/mixpanel/mixpanel-js/releases) and compare against `reference.md § JavaScript (Browser)`.
-2. Check the [Mixpanel Python SDK](https://github.com/mixpanel/mixpanel-python) and Node.js SDK release notes.
-3. Review Mixpanel's "What's New" blog and changelog for any product-level changes to Identity Management, Lexicon, or Data Standards.
-4. Run the full skill on a test scenario and verify the Phase 5 code compiles and produces events in a dev Mixpanel project.
+- **Developer Handoff Spec is unverified.** When no codebase access is available, the generated specification cannot be tested for correctness. The agent fills the template with session context, but cannot verify the code compiles, runs, or produces events in Live View. The developer receiving the spec must validate it.

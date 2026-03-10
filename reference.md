@@ -191,6 +191,599 @@ curl -X POST https://api.mixpanel.com/engage \
 
 ---
 
+## Developer Handoff Specification Template
+
+**Purpose:** When a user goes through Quick Start or Full Implementation but doesn't have codebase access, generate this specification for a human developer to implement. This differs from AGENTS.md (which is for AI agents) in tone, completeness, and support.
+
+**When to use:** User completed discovery and planning but cannot write code directly (no codebase access, or in a planning/PM role).
+
+**Quality bar:** A developer should be able to implement Mixpanel tracking without asking clarifying questions.
+
+### Filling Instructions for Agent
+
+1. **Replace ALL [bracketed placeholders]** with actual values from the session context
+2. **Use complete code** (not patterns) with real tokens, event names, and property values
+3. **Include business context** explaining WHY each event matters (Value Moment, KPIs, priority)
+4. **Provide step-by-step verification** with expected outcomes in Mixpanel Live View
+5. **Add troubleshooting guidance** for common failure modes
+6. **Estimate implementation time** (Quick Start: 2-4 hours / Full: 1-2 days)
+
+### Template Structure
+
+```markdown
+# Mixpanel Implementation Specification
+
+**Generated:** [current date and time]
+**Project:** [company name from context]
+**Mode:** [Quick Start / Full Implementation]
+
+---
+
+## Executive Summary
+
+This specification contains everything a developer needs to implement Mixpanel analytics for [company name].
+
+**Why this matters:** [1-2 sentences explaining the Value Moment and what insights this tracking will unlock. Example: "Tracking when users generate their first report is critical — 87% of users who reach this milestone convert from trial to paid."]
+
+**Scope:** This is a [Quick Start: minimal 2-event foundation / Full Implementation: complete production-ready setup].
+
+**Estimated implementation time:** [Quick Start: 2-4 hours / Full Implementation: 1-2 days]
+
+---
+
+## 1. Technical Foundation
+
+### Platform & SDK
+
+**Platform:** [e.g., Next.js, React Native, Python/Django]
+
+**Mixpanel SDK:** [specific SDK name — e.g., mixpanel-browser, Mixpanel iOS SDK, mixpanel Python]
+
+**SDK version:** [e.g., ^2.50.0, latest stable]
+
+**Installation command:**
+```[language]
+[exact installation command — e.g., npm install mixpanel-browser@^2.50.0]
+```
+
+**Tracking method:** [client-side / server-side / CDP]
+
+**CDP integration:** [none / Segment / RudderStack / mParticle]
+[If CDP: Add note: "⚠️ IMPORTANT: Send all Mixpanel events through [CDP name], NOT the Mixpanel SDK directly. See implementation section for correct integration pattern."]
+
+### Project Configuration
+
+**Mixpanel Project Token:** [actual token OR clear instruction: "Get this from Project Settings → Project Details in the Mixpanel dashboard"]
+
+**Token storage location:** [e.g., .env → NEXT_PUBLIC_MIXPANEL_TOKEN, config/settings.py → MIXPANEL_TOKEN]
+
+**Environment setup:**
+[If dev/prod split:
+- Dev project token: [token or instruction]
+- Prod project token: [token or instruction]
+- Use environment variable to switch: [example]]
+
+### Compliance Requirements
+
+**Consent required:** [Yes / No]
+
+**User base:** [EU users / California users / Global / Other]
+
+**Consent implementation required:** [If yes, provide exact pattern:]
+
+⚠️ **CRITICAL:** If consent is required, NO Mixpanel events may fire before user consent is granted. Violations can result in GDPR fines up to 4% of annual revenue and require data deletion requests.
+
+[If consent required, include exact initialization pattern with opt-out defaults]
+
+---
+
+## 2. Business Context — What You're Building
+
+### The Value Moment
+
+**[Value Moment Name]** — [Description of what this represents]
+
+This is the single most important user action we're tracking. When a user does this, it means [business outcome].
+
+**How this ties to company goals:**
+[List 2-3 KPIs or business metrics this enables. Example:
+- OKR Q1 2026: Increase activation rate from 40% to 55%
+- Board Metric: Time to Value Moment (target: <7 days)
+- Product Roadmap: Report generation drives 80% of retention]
+
+### Event Priority Ranking
+
+Not all events are equal. If engineering time is limited, implement in this order:
+
+1. **[Value Moment Event]** — HIGHEST priority. This is our Value Moment and powers [specific business metric].
+2. **sign_up_completed** — HIGH priority. Essential for measuring acquisition and identity linkage.
+[If Quick Start, stop here. If Full Implementation, continue with priority-ranked events 3-N]
+
+**Rationale:** Implementing these [2 / N] events first means we can measure [key metric] by [deadline/milestone].
+
+---
+
+## 3. Implementation Guide
+
+### Step 1: Install SDK
+
+[Platform-specific installation instructions with exact commands. Include any additional dependencies or configuration files needed.]
+
+**For [platform]:**
+```[language]
+[exact installation command]
+```
+
+[If multi-platform (Full Implementation), provide subsections for each]
+
+**Verification:** After installation, you should be able to import Mixpanel:
+```[language]
+[import statement]
+```
+
+---
+
+### Step 2: Initialize Mixpanel
+
+**Where to add this code:** [specific file path if known from Pre-Flight OR description like "your app entry point (e.g., _app.tsx, main.ts, application startup)"]
+
+[If consent required:]
+**⚠️ Consent Gate:** Mixpanel must be initialized with tracking disabled by default. Only enable after user consent.
+
+**Complete initialization code:**
+```[language]
+[Complete initialization code with:
+- Actual token reference (not placeholder)
+- Consent gate if required (opt_out_tracking_by_default: true)
+- Any other required configuration
+- Comments explaining each option]
+```
+
+[If consent required, add opt-in flow:]
+**After user consents:**
+```[language]
+[opt-in code]
+```
+
+**Do NOT:**
+- Initialize Mixpanel in multiple places (creates duplicate instances)
+- Hardcode the project token (use environment variable)
+- Skip the consent gate if serving EU/CA users
+
+---
+
+### Step 3: Track Events
+
+[One subsection per event]
+
+#### Event 1: sign_up_completed
+
+**When to track:** After user account is successfully created in your database (not on form submit, not on button click — wait for DB confirmation)
+
+**Why this matters:** This event establishes user identity and measures acquisition. Without it, we cannot link anonymous browsing events to authenticated user behavior.
+
+**Where to add this code:** [file location if known, OR description: "in your signup handler, after the database INSERT succeeds"]
+
+**Complete implementation:**
+```[language]
+[Complete, ready-to-use code with:
+- Actual event name
+- All required properties with real field names
+- Comments explaining each property
+- Example showing where user data comes from]
+
+// Example:
+mixpanel.track('sign_up_completed', {
+  sign_up_method: user.authProvider,    // 'email', 'google', 'github'
+  platform: 'web',                       // or 'ios', 'android', etc.
+  is_first_time: true                    // always true for signup
+});
+```
+
+**Properties explained:**
+- `sign_up_method` (string, required): How the user signed up. Possible values: [enum list]. This helps us understand which auth methods drive the highest activation.
+- `platform` (string, required): Where the signup occurred. Use: 'web', 'ios', 'android'. Powers platform-specific conversion analysis.
+[Continue for each property with business meaning]
+
+**Expected data in Mixpanel:**
+After implementation, you should see in Live View:
+- Event name: `sign_up_completed` (exact spelling, case-sensitive)
+- Properties showing realistic values (not undefined/null)
+- Appears within 60 seconds of test signup
+- distinct_id is a device ID (before identify()) or user ID (after identify())
+
+---
+
+#### Event 2: [Value Moment Event Name]
+
+**When to track:** [Detailed trigger description with timing specifics. Example: "After the report generation completes successfully (after the file is saved, not when the user clicks 'Generate')"]
+
+**Why this matters:** [Business explanation. Example: "This is our Value Moment. Users who generate a report within 7 days of signup have an 87% conversion rate from trial to paid. This event powers our activation funnel and Time to Value metric."]
+
+**Where to add this code:** [file location or description]
+
+**Complete implementation:**
+```[language]
+[Complete code with all properties and comments]
+```
+
+**Properties explained:**
+[Each property with data type, enum values if applicable, and business meaning]
+
+**Expected data in Mixpanel:**
+[What to verify in Live View with specific expected values]
+
+---
+
+[Repeat for each additional event in tracking plan. For Full Implementation, this could be 10-15 events.]
+
+---
+
+### Step 4: Set Up Identity Management
+
+**The Identity Contract:**
+
+Mixpanel needs to know when an anonymous user becomes a known user (login/signup), and when users log out. This is handled through two calls: `identify()` and `reset()`.
+
+**Why this matters:**
+- **Skipping `identify()`:** Events won't link to user profiles → cohort analysis impossible, user-level metrics broken
+- **Skipping `reset()`:** Next user's events merge with previous user's data → major privacy violation, data corruption
+- **Wrong timing:** Anonymous events won't bridge to authenticated identity → fragmented user profiles
+
+#### On Login/Signup (after database confirms user creation)
+
+**Where to add:** [file location for login/signup handler]
+
+```[language]
+[Complete identify() call with actual user ID field reference]
+[Complete people.set() call for profile properties]
+
+// Example:
+mixpanel.identify(user.id);  // Use stable internal ID, NOT email
+mixpanel.people.set({
+  $name: user.name,
+  $email: user.email,
+  account_type: user.accountType,  // custom property
+  sign_up_date: user.createdAt
+});
+```
+
+**Critical:** Use your internal user ID (database primary key, UUID), NOT email addresses. Emails change; IDs don't.
+
+#### On Session Restore (if user is already logged in)
+
+**Where to add:** [file location for session initialization / app startup]
+
+```[language]
+[identify() call on session restore]
+
+// If user is already authenticated on app load:
+if (currentUser) {
+  mixpanel.identify(currentUser.id);
+}
+```
+
+#### On Logout
+
+**Where to add:** [file location for logout handler]
+
+```[language]
+[Complete reset() call]
+
+// Example:
+mixpanel.reset();  // Clears distinct_id, generates new anonymous ID
+```
+
+**⚠️ Do not skip this.** Failing to call `reset()` on logout causes User A's events to merge with User B's profile after User B logs in on the same device. This is a privacy violation and corrupts your data.
+
+---
+
+## 4. Verification & Testing
+
+### Pre-Deployment Checklist
+
+Before considering this complete:
+
+- [ ] SDK installed and imports work without errors
+- [ ] Mixpanel initializes on app startup (check console/logs for init confirmation)
+- [ ] [If consent required] Tracking is disabled until opt-in (verify no network requests to api.mixpanel.com before consent)
+- [ ] Each event fires in the correct location (after action succeeds, not before)
+- [ ] Identity calls placed in login, logout, and session restore handlers
+- [ ] Environment variable for project token is set (not hardcoded)
+
+### Live View Verification (Step-by-Step)
+
+**How to test:**
+
+1. **Open Mixpanel Live View**
+   - Go to: [Mixpanel project URL if known, OR: "Mixpanel dashboard → Project Settings → Implementation → Live View"]
+   - Keep this tab open while testing
+
+2. **Test Event 1: sign_up_completed**
+   - In your dev/staging environment: [trigger action — e.g., "create a new user account"]
+   - Expected result in Live View (within 60 seconds):
+     - Event name: `sign_up_completed` (exact spelling)
+     - Properties: `sign_up_method`, `platform` with realistic values
+     - distinct_id: a device ID or anonymous ID (before identify())
+
+3. **Test Event 2: [Value Moment Event]**
+   - In your dev/staging environment: [trigger action]
+   - Expected result in Live View (within 60 seconds):
+     - Event name: `[event_name]` (exact spelling)
+     - Properties: [list expected property names and example values]
+     - distinct_id: matches the user who triggered it
+
+[Repeat for each event]
+
+4. **Test Identity Flow**
+   - Sign up → verify distinct_id changes from device ID to user ID after identify() call
+   - Check Users tab: user profile should exist with $name and $email
+   - Log out → verify reset() clears distinct_id
+   - Log back in → verify events link to same user profile (not fragmented)
+
+**Expected results:**
+- Events appear in Live View within 60 seconds
+- Event names match exactly (case-sensitive)
+- Properties show realistic values (no undefined/null/empty strings)
+- After login, user profile appears in Users tab with correct properties
+- After logout and re-login, events continue linking to same user profile
+
+### Troubleshooting Common Issues
+
+**Problem: Events don't appear in Live View**
+
+Possible causes:
+1. **Wrong project token** → Verify token matches Project Settings → Project Details
+2. **Initialization failed** → Check browser console / server logs for Mixpanel errors
+3. **Event fired before init** → Ensure mixpanel.init() runs before any track() calls
+4. **Network blocked** → Check network tab: POST to api.mixpanel.com/track should return 200
+5. **Consent gate blocking** → If opt_out_tracking_by_default is true, verify opt_in_tracking() was called
+
+**Debug steps:**
+```[language]
+// Add before track() call to verify event is reached:
+console.log('About to track event:', eventName, properties);
+mixpanel.track(eventName, properties);
+```
+
+**Problem: Event names or properties are wrong**
+
+Possible causes:
+1. **Typo in event name** → Event names are case-sensitive: `sign_up_completed` ≠ `Sign_Up_Completed`
+2. **Properties undefined** → Verify property values exist at the moment track() is called
+3. **Wrong data type** → Check Mixpanel Lexicon for expected types
+
+**Debug steps:**
+- Log the full event object before sending
+- Check Mixpanel Live View for actual values received
+- Compare against expected schema in this spec
+
+**Problem: Identity not linking**
+
+Possible causes:
+1. **identify() called before user exists** → Wait for DB confirmation before calling identify()
+2. **identify() called with email instead of user ID** → Use stable internal ID
+3. **reset() not called on logout** → Next user's events merge with previous user
+4. **identify() called multiple times with different IDs** → Always call reset() first before switching users
+
+**Debug steps:**
+- Check distinct_id in Live View before and after login
+- Verify user profile exists in Users tab
+- Check that all events after login show same distinct_id as user ID
+
+**Problem: Duplicate events**
+
+Possible causes:
+1. **Multiple Mixpanel instances** → Initialize once, import singleton elsewhere
+2. **Event fired in loop** → Move track() call outside loop or use server-side batching
+3. **No deduplication key** → Add $insert_id property for server-side events
+
+---
+
+## 5. Naming Conventions & Standards
+
+All future Mixpanel events MUST follow these rules to maintain data quality:
+
+### Event Names
+
+**Format:** `snake_case`
+
+**Structure:** past_tense_verb + noun
+
+**Examples:**
+- ✅ `report_generated`, `item_added_to_cart`, `video_played`
+- ❌ `Generate Report`, `add-item`, `videoPlay`
+
+### Property Names
+
+**Format:** `snake_case`
+
+**Booleans:** `is_` prefix (e.g., `is_first_time`, `is_premium`)
+
+**No abbreviations:** Write full words
+- ✅ `subscription_type`
+- ❌ `sub_type`
+
+### Why Standards Matter
+
+Inconsistent naming creates:
+- Duplicate metrics (users track both `user_signup` and `sign_up_completed` for the same action)
+- Broken reports (queries fail when casing changes)
+- Unusable Lexicon (analysts can't find events)
+- Wasted engineering time (re-instrumenting to fix naming)
+
+**Standard now, avoid refactoring later.**
+
+---
+
+## 6. What NOT to Do
+
+⛔ **Do not introduce other analytics tools.** This project uses Mixpanel exclusively. All tracking goes through Mixpanel. Do not add Google Analytics, Amplitude, Segment (unless as CDP), or custom analytics without explicit approval.
+
+⛔ **Do not track PII as event properties.**
+
+Never include in event properties:
+- Email addresses
+- Full names
+- Phone numbers
+- IP addresses
+- Payment details
+- Social security numbers
+
+**Why:** PII in event properties cannot be easily deleted and may violate GDPR/CCPA.
+
+**Instead:** Use `mixpanel.people.set()` for user profile properties (name, email). Profiles can be deleted on request.
+
+⛔ **Do not fire events before actions succeed.**
+
+Track `report_generated` AFTER the report exists in your database, not when the user clicks "Generate Report."
+
+**Why:** If you track on button click and the action fails (network error, validation failure), your metrics will be inflated with phantom events.
+
+⛔ **Do not skip `mixpanel.reset()` on logout.**
+
+**Why:** Failing to reset causes User A to log out, User B to log in on the same device, and User B's events to merge with User A's profile. This is both a privacy violation and data corruption.
+
+⛔ **Do not call `identify()` with email addresses.**
+
+Use stable internal user IDs (database ID, UUID).
+
+**Why:** Emails change (user updates email, or uses multiple emails). If you identify with email, user profiles fragment.
+
+⛔ **Do not track events inside loops.**
+
+Each `mixpanel.track()` call is a network request.
+
+```[language]
+// ❌ WRONG:
+items.forEach(item => {
+  mixpanel.track('item_processed', { item_id: item.id });
+});
+
+// ✅ CORRECT:
+mixpanel.track('batch_processed', {
+  item_count: items.length,
+  item_ids: items.map(i => i.id).join(',')
+});
+```
+
+⛔ **Do not hardcode the Mixpanel project token.**
+
+Read it from environment config (.env, settings file).
+
+**Why:** Hardcoded tokens get committed to git, leak in logs, and require code changes to switch environments.
+
+---
+
+## 7. Post-Implementation
+
+### Documentation Requirements
+
+After implementation is complete:
+
+1. **Add Lexicon descriptions in Mixpanel**
+   - Go to: Data Management → Lexicon
+   - For each event, add a one-sentence description: "Fired when [trigger] to measure [business outcome]"
+   - For each property, add expected values and meaning
+
+2. **Create `AGENTS.md` in your codebase**
+   - This file documents Mixpanel tracking for future AI agents who work on your codebase
+   - Place it in your project root
+   - Use the template below
+
+3. **[If Full Implementation] Enable governance**
+   - Data Standards: Project Settings → Data Governance → Enable Data Standards
+   - Event Approval: Project Settings → Data Governance → Enable Event Approval
+   - Assign Data Owner role: [role/person from session context]
+
+### AGENTS.md Template for Your Codebase
+
+Create this file in your project root so future AI agents understand Mixpanel is the analytics tool:
+
+```markdown
+[Insert filled AGENTS.md.template content here with actual values:
+- Platform, SDK, version, tracking method, CDP, consent
+- Initialization file path
+- Identity management file paths
+- Complete tracking plan table
+- Naming conventions
+- Anti-patterns]
+```
+
+### Next Steps (Priority Order)
+
+[If Quick Start:]
+Now that you have basic tracking live, recommended next steps:
+
+1. **Expand tracking plan** — Add events for [suggestions based on Value Moment and product type]
+2. **Set up funnels** — Create funnel in Mixpanel: signup → [setup steps] → Value Moment
+3. **Enable cohort analysis** — Build cohorts based on Value Moment completion
+4. **Dashboard creation** — Build dashboard with: activation rate, Time to Value, weekly active users
+5. **Data governance** — Add Lexicon descriptions, enable Data Standards
+
+[If Full Implementation:]
+Now that you have complete tracking live, critical next steps:
+
+1. **Governance setup** — Populate Lexicon, enable Data Standards and Event Approval (see Section 3 above)
+2. **Dashboard creation** — Build dashboards for: [KPIs from session context]
+3. **Alerting** — Set up alerts for: [critical metric drops, unusual event volumes]
+4. **Regular reviews** — Schedule quarterly data quality audits with [Data Owner role]
+
+### Schedule Follow-Up (Recommended)
+
+After implementation, schedule a follow-up session to:
+- Verify all events appearing in Live View with correct properties
+- Walk through Lexicon and Data Standards setup together
+- Run through the ID Management QA checklist (reference.md § Phase 6)
+- Review first 7 days of data for anomalies
+
+---
+
+## 8. Support Resources
+
+**Questions or issues during implementation?**
+
+- **Mixpanel Documentation:** https://docs.mixpanel.com
+- **SDK-specific docs:** [link to relevant SDK docs based on platform]
+[If CDP:] - **[CDP] + Mixpanel integration guide:** [link]
+- **Mixpanel Community:** https://community.mixpanel.com
+
+**Common questions:**
+
+- **"How do I test without polluting production data?"** → Use separate dev/staging project tokens, or use Mixpanel's test mode
+- **"Can I send historical data?"** → Yes, set the `time` property to a Unix timestamp
+- **"How do I delete test data?"** → Contact Mixpanel support for data deletion (cannot be done via UI)
+- **"What if I need to change event names later?"** → Use Lexicon aliases to map old names to new names (no code changes required)
+
+---
+
+## 9. Appendix: Full Tracking Plan Reference
+
+[Complete table of all events with property schemas]
+
+| Event Name | Trigger | Properties | Data Types | Required | Business Purpose |
+|------------|---------|------------|------------|----------|------------------|
+| sign_up_completed | User account created in DB | sign_up_method, platform, is_first_time | string, string, boolean | Yes, Yes, No | Measures acquisition, establishes identity |
+| [value_moment_event] | [trigger] | [properties] | [types] | [required flags] | [business purpose] |
+[... continue for all events]
+
+### Property Enums
+
+**sign_up_method:** 'email', 'google', 'github', 'apple', 'sso'
+**platform:** 'web', 'ios', 'android', 'api'
+[... continue for all enum properties]
+
+---
+
+**This specification was generated using the Mixpanel Implementation Skill.**
+
+**Last updated:** [timestamp]
+
+**Questions?** [contact info or escalation path if available]
+```
+
+---
+
 ## Phase 0 — Pre-Implementation Discovery
 
 > **AGENT PROMPT — Phase 0**
