@@ -187,7 +187,7 @@ That's it. Four questions maximum (fewer if Pre-Flight answers some).
 **What about Group Analytics and identity complexity?** These are important but not one-way doors in the Quick Start context:
 
 - **Group Analytics:** Can be added later without rework. The events tracked in Quick Start don't become invalid if Group Analytics is added afterward. Defer to "what's next" recommendations.
-- **Identity complexity:** Basic identify/reset is correct for both simple and complex cases. The risk is that complex cases need *more* identity work — but the basic work isn't *wrong*. Surface it as a flag, not a gate (see Step 5 identity section below).
+- **Identity complexity:** Basic identify/reset is correct for both simple and complex cases. The risk is that complex cases need *more* identity work — but the basic work isn't *wrong*. Surface it as a flag, not a gate (see Step 6 identity section below).
 
 ### Step 2 — Context Gathering (Research or Pre-Flight)
 
@@ -258,19 +258,19 @@ For Quick Start:
 
 **One project is acceptable for session one.** Dev/prod split is surfaced in "what's next."
 
-### Codebase Access Check
+### Step 5 — Codebase Access Check
 
 **Before proceeding to implementation, confirm codebase access:**
 
 > "Do you have access to the codebase right now, or are you gathering specifications for a developer to implement later?"
 
 **If user has codebase access:**
-- Proceed with Step 5 (Implementation + Identity)
+- Proceed with Step 6 (Implementation + Identity)
 - Write code directly into files
 - Use Pre-Flight scan results if available
 
 **If user is gathering specs for handoff:**
-- Skip to Developer Handoff Spec Generation (after Step 6)
+- Skip to Developer Handoff Spec Generation (after Step 7)
 - Collect any remaining technical details:
   - Specific file paths (if they know them)
   - Environment variable naming conventions
@@ -278,7 +278,7 @@ For Quick Start:
 - Do NOT attempt to write code to files
 - Mark context with: `handoff_mode: true`
 
-### Step 5 — Implementation + Identity
+### Step 6 — Implementation + Identity
 
 This is the core of Quick Start. The agent writes real code, placed in specific files if Pre-Flight was run.
 
@@ -321,7 +321,7 @@ If any signals are present, the agent says:
 
 This is an offer, not a gate. The user decides.
 
-### Step 6 — Verify in Live View
+### Step 7 — Verify in Live View
 
 - Deploy to dev environment (or local if no dev exists)
 - Open Mixpanel Live View
@@ -373,11 +373,11 @@ This is an offer, not a gate. The user decides.
 - Code-only snippets file (for quick reference)
 
 **After generating spec:**
-- Skip Step 6 (Verify in Live View) — developer will do this after implementation
-- Skip AGENTS.md creation in Step 7 (it's included in the handoff spec as a template)
+- Skip Step 7 (Verify in Live View) — developer will do this after implementation
+- Skip AGENTS.md creation in Step 8 (it's included in the handoff spec as a template)
 - Present next steps modified for handoff context: "After your developer implements this..."
 
-### Step 7 — Quick Start Wrap-Up
+### Step 8 — Quick Start Wrap-Up
 
 **If codebase access was available (normal implementation path):**
 
@@ -518,7 +518,7 @@ Then ask only the questions research couldn't answer:
 
 | Remaining question | Decision It Drives |
 |---|---|
-| Do you use a CDP or data warehouse? (Segment, Rudderstack, mParticle, Snowflake, BigQuery) | If yes → skip SDK installation; route through integration in Phase 5 |
+| Do you use a CDP or data warehouse? (Segment, Rudderstack, mParticle, Snowflake, BigQuery) | If yes → skip SDK installation; route through integration in Phase 6 |
 | Do you have the Group Analytics add-on? (if not inferable from pricing page) | If yes → surface Group Analytics in Phase 3 |
 | What are the 2–3 most important business questions you want Mixpanel to answer? | Drives event selection, KPI design, and tracking plan in Phases 1–4 |
 
@@ -527,8 +527,8 @@ Then ask only the questions research couldn't answer:
 | Question | Decision It Drives |
 |---|---|
 | What type of product? (SaaS, e-commerce, media, fintech, mobile game, marketplace, internal tool) | Vertical-specific event examples in Phase 4 |
-| What platform(s)? (web, iOS, Android, React Native, Flutter, server-side only, combo) | SDK selection in Phase 5 |
-| Do you use a CDP or data warehouse? (Segment, Rudderstack, mParticle, Snowflake, BigQuery) | If yes → skip SDK installation; route through integration in Phase 5 |
+| What platform(s)? (web, iOS, Android, React Native, Flutter, server-side only, combo) | SDK selection in Phase 6 |
+| Do you use a CDP or data warehouse? (Segment, Rudderstack, mParticle, Snowflake, BigQuery) | If yes → skip SDK installation; route through integration in Phase 6 |
 | Do you have the Group Analytics add-on? (availability varies by plan) | If yes → surface Group Analytics in Phase 3 |
 | What are the 2–3 most important business questions you want Mixpanel to answer? | Drives event selection, KPI design, and tracking plan in Phases 1–4 |
 
@@ -560,7 +560,7 @@ Store all confirmed answers in the Context Block. They gate which content you su
 
 1. "Have you already created a Mixpanel account and project, or starting fresh?"
 2. "Do you have a separate dev/staging environment?"
-3. "Do you have users in the EU or California?" — If yes, flag for a consent gate in Phase 5 before any initialization code is written.
+3. "Do you have users in the EU or California?" — If yes, flag for a consent gate in Phase 6 before any initialization code is written.
 
 **Steps in order:**
 
@@ -598,7 +598,7 @@ Once dev and production projects exist, ask:
 | Production project token | mixpanel.com → Production project → Settings → Project Token |
 | Dev/staging project token | mixpanel.com → Development project → Settings → Project Token |
 
-**Store both tokens in the Context Block.** They are injected verbatim into every initialization code snippet produced in Phase 5. Do not use `'YOUR_PROJECT_TOKEN'` placeholders — if the tokens are in hand, use them.
+**Store both tokens in the Context Block.** They are injected verbatim into every initialization code snippet produced in Phase 6. Do not use `'YOUR_PROJECT_TOKEN'` placeholders — if the tokens are in hand, use them.
 
 If the customer cannot provide tokens yet (e.g., someone else owns the Mixpanel account): proceed with placeholder values and flag that tokens must be substituted before any events are sent.
 
@@ -630,7 +630,7 @@ If the customer cannot provide tokens yet (e.g., someone else owns the Mixpanel 
 
 **Group Analytics late-discovery:** If the customer indicates during this phase that they need account-level analysis (e.g., "we sell to companies and need to see usage by account") and Group Analytics was not confirmed in Phase 0: ask directly whether they have the Group Analytics add-on. If yes, surface the Group Analytics section now before moving to Phase 4, and update the Group Analytics flag in the Context Block.
 
-**CDP late-discovery:** If the customer mentions they use a CDP (Segment, Rudderstack, mParticle) at any point after Phase 0: note it in the Context Block. When you reach Phase 5, route through the integration path rather than SDK installation. The tracking plan design in Phase 4 remains valid — only the implementation method changes.
+**CDP late-discovery:** If the customer mentions they use a CDP (Segment, Rudderstack, mParticle) at any point after Phase 0: note it in the Context Block. When you reach Phase 6, route through the integration path rather than SDK installation. The tracking plan design in Phase 4 remains valid — only the implementation method changes.
 
 **Output of this phase:** Customer aligned on the Mixpanel data model (events, properties, profiles, super properties). Group Analytics scope confirmed. Required before Phase 4.
 
@@ -706,21 +706,21 @@ Owner: <team or email>
 
 **Spec checklist before finalizing:** Name matches project convention; name is past tense and specific; no dynamic values in the event name (use a property instead); no PII in properties; property names are `snake_case` and match existing names where possible; required properties will always be present on every call.
 
-**Output of this phase:** Signed-off tracking plan with at minimum `sign_up_completed` and the Value Moment fully specified (name, trigger, properties). Required before Phase 5.
+**Output of this phase:** Signed-off tracking plan with at minimum `sign_up_completed` and the Value Moment fully specified (name, trigger, properties). Required before Phase 6.
 
-### Codebase Access Check
+### Phase 5 — Codebase Access Check
 
 **Before proceeding to implementation, confirm codebase access:**
 
 > "Do you have access to the codebase right now, or are you gathering specifications for a developer to implement later?"
 
 **If user has codebase access:**
-- Proceed with Phase 5 (Implementation)
+- Proceed with Phase 6 (Implementation)
 - Write code directly into files
 - Use Pre-Flight scan results if available
 
 **If user is gathering specs for handoff:**
-- Skip to Developer Handoff Spec Generation (after Phase 6)
+- Skip to Developer Handoff Spec Generation (after Phase 7)
 - Collect any remaining technical details:
   - Specific file paths (if they know them)
   - Environment variable naming conventions
@@ -728,13 +728,13 @@ Owner: <team or email>
 - Do NOT attempt to write code to files
 - Mark context with: `handoff_mode: true`
 
-### Phase 5 — Implementation
+### Phase 6 — Implementation
 
 **Decision gate (from Phase 0 and Phase 2 answers):**
 
-- Customer uses Segment/Rudderstack/mParticle → use CDP integration, no new SDK → see `reference.md § Phase 5 — Integration Pointers`
-- Customer uses Snowflake/BigQuery → see `reference.md § Phase 5 — Warehouse Connectors`
-- EU or CA users flagged in Phase 2 → surface the consent pattern from `reference.md § Phase 5 — Consent and Opt-In Tracking` before writing any initialization code
+- Customer uses Segment/Rudderstack/mParticle → use CDP integration, no new SDK → see `reference.md § Phase 8 — Integration Pointers`
+- Customer uses Snowflake/BigQuery → see `reference.md § Phase 8 — Warehouse Connectors`
+- EU or CA users flagged in Phase 2 → surface the consent pattern from `reference.md § Phase 8 — Consent and Opt-In Tracking` before writing any initialization code
 - Otherwise, ask: "Do you want to track from the server (backend), browser/app (client), or both?" — or skip this question if the codebase scan already made the answer obvious
 
 **Tracking method recommendation:**
@@ -747,7 +747,7 @@ Owner: <team or email>
 
 **Token injection:** Use the real project tokens collected in Phase 2 — never write `'YOUR_PROJECT_TOKEN'` if the tokens are already in hand. If a dev/prod split exists, emit both initializations with the correct token for each environment.
 
-**Then surface the relevant SDK section(s) from `reference.md § Phase 5 — SDK Implementation Guide`:**
+**Then surface the relevant SDK section(s) from `reference.md § Phase 8 — SDK Implementation Guide`:**
 
 | Platform | Reference Section |
 |---|---|
@@ -773,13 +773,13 @@ Place each `track()` call as close to the triggering action as possible — in t
 
 **Server-side:** Forward client IP (`ip`) only when policy and consent rules permit geolocation enrichment. Always set `$insert_id` for deduplication. Parse User-Agent manually for `$browser`, `$os`, `$device`.
 
-**QA gate — verify before proceeding to Phase 6:** Ask the customer to deploy their current changes to the dev environment, open Mixpanel Live View (mixpanel.com → dev project → Live View), and confirm at least one event appears. Do not proceed to identity management until basic event ingestion is confirmed working. Debugging initialization and identity at the same time makes root-cause analysis very difficult.
+**QA gate — verify before proceeding to Phase 7:** Ask the customer to deploy their current changes to the dev environment, open Mixpanel Live View (mixpanel.com → dev project → Live View), and confirm at least one event appears. Do not proceed to identity management until basic event ingestion is confirmed working. Debugging initialization and identity at the same time makes root-cause analysis very difficult.
 
-**Post-deploy verification (after each new event or batch):** Beyond Live View, confirm the event appears in Reports for the expected date range (e.g. run a segmentation or Insights query filtered by the event name and today's date). Check that key properties are populating with expected values. Event and property names are case-sensitive — zero results often mean a typo or casing mismatch. See `reference.md § Phase 5 — Post-Deploy Verification` for details.
+**Post-deploy verification (after each new event or batch):** Beyond Live View, confirm the event appears in Reports for the expected date range (e.g. run a segmentation or Insights query filtered by the event name and today's date). Check that key properties are populating with expected values. Event and property names are case-sensitive — zero results often mean a typo or casing mismatch. See `reference.md § Phase 8 — Post-Deploy Verification` for details.
 
 **Output of this phase:** All tracking and initialization code written and placed in the codebase. At least one event confirmed arriving in Mixpanel Live View. Customer ready to wire up identity calls.
 
-### Phase 6 — Identity Management
+### Phase 7 — Identity Management
 
 **If a codebase scan was run (Pre-Flight):** The login, signup, logout, and session-restore handlers are already located. Do not ask whether anonymous browsing exists — read the auth flow to determine it directly. Place `.identify()`, `.people.set()`, `.register()`, and `.reset()` calls in the exact locations already identified. Only ask if something in the auth flow is ambiguous (e.g., whether a middleware handles re-authentication on page load).
 
@@ -809,15 +809,15 @@ On logout              → mixpanel.reset()
 4. Update super properties via `.register()`
 5. Track `sign_up_completed` event (AFTER identify — so it's attributed correctly)
 
-**Server-side identity:** SDKs do not auto-generate `$device_id`. Store a UUID in a cookie. Pass `$device_id` on every pre-login event. Pass both `$device_id` and `$user_id` on the first post-login event. See `reference.md § Phase 6 — Server-Side Identity Flow` for full Python example.
+**Server-side identity:** SDKs do not auto-generate `$device_id`. Store a UUID in a cookie. Pass `$device_id` on every pre-login event. Pass both `$device_id` and `$user_id` on the first post-login event. See `reference.md § Phase 8 — Server-Side Identity Flow` for full Python example.
 
-**Full client-side flow** (signup → logout → re-open) is in `reference.md § Phase 6 — Client-Side Identity Flow`.
+**Full client-side flow** (signup → logout → re-open) is in `reference.md § Phase 8 — Client-Side Identity Flow`.
 
-**Identity checklist (quick validation):** Before proceeding, confirm: `identify()` was called on login/signup; profile attributes use `people.set()` not `track()`; `identify()` on re-open when already logged in (not every page load); stable unique ID (not email/device). Full checklist and QA: `reference.md § Phase 6`.
+**Identity checklist (quick validation):** Before proceeding, confirm: `identify()` was called on login/signup; profile attributes use `people.set()` not `track()`; `identify()` on re-open when already logged in (not every page load); stable unique ID (not email/device). Full checklist and QA: `reference.md § Phase 8`.
 
-**QA before production:** Run the ID Management QA Checklist from `reference.md § Phase 6`.
+**QA before production:** Run the ID Management QA Checklist from `reference.md § Phase 8`.
 
-**Output of this phase:** Identity calls (`identify`, `reset`) placed in the correct locations. ID Management QA checklist passed in dev before any production deployment. Required before Phase 7.
+**Output of this phase:** Identity calls (`identify`, `reset`) placed in the correct locations. ID Management QA checklist passed in dev before any production deployment. Required before Phase 8.
 
 ### Developer Handoff Spec Generation (No Codebase Access Mode)
 
@@ -847,7 +847,7 @@ On logout              → mixpanel.reset()
 - Business context: Value Moment rationale, KPI alignment, priority ranking
 - Group Analytics setup if applicable (Phase 0 context)
 - Multi-platform integration if applicable
-- Governance checklist with role assignments (Phase 7 preparation)
+- Governance checklist with role assignments (Phase 8 preparation)
 
 **Save to:** User's current working directory (or ~/Downloads if working directory is unclear).
 
@@ -867,12 +867,12 @@ On logout              → mixpanel.reset()
 - Code-only snippets file (for quick reference)
 
 **After generating spec:**
-- Skip Phase 5 implementation (developer will do this)
-- Skip Phase 6 identity verification (included in spec as implementation steps)
+- Skip Phase 6 implementation (developer will do this)
+- Skip Phase 7 identity verification (included in spec as implementation steps)
 - Skip AGENTS.md creation (it's included in the handoff spec as a template)
-- Modify Phase 7 presentation: explain that governance setup is included in the spec but should happen AFTER developer implements
+- Modify Phase 8 presentation: explain that governance setup is included in the spec but should happen AFTER developer implements
 
-### Phase 7 — Data Governance
+### Phase 8 — Data Governance
 
 **Ask:**
 
@@ -910,9 +910,9 @@ For every event shipped, add: Description (one sentence: what triggers it, what 
 
 **Quarterly review:** Audit zero-volume events, check for missing Lexicon descriptions, validate naming conventions on new events.
 
-See `reference.md § Phase 7` for: governance pitfalls table, tracking plan column schema, naming change management process.
+See `reference.md § Phase 8` for: governance pitfalls table, tracking plan column schema, naming change management process.
 
-**Close:** After Phase 7, summarize the full implementation.
+**Close:** After Phase 8, summarize the full implementation.
 
 **If codebase access was available (normal implementation path):**
 
@@ -1056,19 +1056,19 @@ These checklists apply to Full Implementation mode. Quick Start uses Live View v
 - Naming conventions validated (`snake_case`, stable values).
 - Tracking plan reviewed and approved by product, engineering, and analytics.
 
-**Phase 5 exit**
+**Phase 6 exit**
 
 - Initialization and event calls implemented in codebase.
 - At least one event observed in dev Live View.
 - Tracking path (SDK/CDP/warehouse) matches discovery decisions.
 
-**Phase 6 exit**
+**Phase 7 exit**
 
 - `identify`, `reset`, and profile/super-property ordering validated.
 - ID Management QA checklist passed in dev.
 - Multi-device and anonymous-to-auth flows tested where applicable.
 
-**Phase 7 exit**
+**Phase 8 exit**
 
 - Lexicon entries populated for shipped events.
 - Data Standards and Event Approval enabled.
@@ -1156,7 +1156,8 @@ Key sections:
 - **Phase 2** — Project setup steps, token-switching code, role permissions
 - **Phase 3** — Full data model, property types, Group Analytics code
 - **Phase 4** — Tracking plan methodology, vertical-specific events, template links
-- **Phase 5** — All SDK code (JS, Python, Node.js, React Native, iOS Swift, Android, HTTP API), CDP/warehouse integration
-- **Phase 6** — Full identity flows (client-side and server-side), QA checklist
-- **Phase 7** — Governance framework, pitfalls table, tracking plan column schema
+- **Phase 5** — Codebase Access Check
+- **Phase 6** — All SDK code (JS, Python, Node.js, React Native, iOS Swift, Android, HTTP API), CDP/warehouse integration
+- **Phase 7** — Full identity flows (client-side and server-side), QA checklist
+- **Phase 8** — Governance framework, pitfalls table, tracking plan column schema
 - **Reference table** — All key Mixpanel documentation URLs
