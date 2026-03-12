@@ -23,8 +23,10 @@ Use this section in Quick Start mode to reach working code fast. Each platform h
 ### JavaScript (Browser) — Quick Start
 
 ```javascript
-// 1. Init — add <script src="https://cdn.mxpnl.com/libs/mixpanel-2-latest.min.js"></script> first
+// 1. Init — install via npm: npm install mixpanel-browser
+import mixpanel from 'mixpanel-browser';
 mixpanel.init('YOUR_PROJECT_TOKEN', { debug: true });
+// CDN alternative: <script src="https://cdn.mxpnl.com/libs/mixpanel-2-latest.min.js"></script>
 
 // 2. Track
 mixpanel.track('sign_up_completed', {
@@ -1474,18 +1476,16 @@ If you have access to a segmentation or query tool (e.g. Run-Segmentation-Query,
 
 #### JavaScript (Browser)
 
-**Install via CDN (paste before closing `</head>` tag):**
-
-```html
-<script type="text/javascript">
-  (function (f, b) { if (!b.__SV) { var e, g, i, h; window.mixpanel = b; b._i = []; b.init = function (e, f, c) { function g(a, d) { var b = d.split("."); 2 == b.length && ((a = a[b[0]]), (d = b[1])); a[d] = function () { a.push([d].concat(Array.prototype.slice.call(arguments, 0))); }; } var a = b; "undefined" !== typeof c ? (a = b[c] = []) : (c = "mixpanel"); a.people = a.people || []; a.toString = function (a) { var d = "mixpanel"; "mixpanel" !== c && (d += "." + c); a || (d += " (stub)"); return d; }; a.people.toString = function () { return a.toString(1) + ".people (stub)"; }; i = "disable time_event track track_pageview track_links track_forms track_with_groups add_group set_group remove_group register register_once alias unregister identify name_tag set_config reset opt_in_tracking opt_out_tracking has_opted_in_tracking has_opted_out_tracking clear_opt_in_out_tracking start_batch_senders people.set people.set_once people.unset people.increment people.append people.union people.track_charge people.clear_charges people.delete_user people.remove".split(" "); for (h = 0; h < i.length; h++) g(a, i[h]); var j = "set set_once union unset remove delete".split(" "); a.get_group = function () { function b(c) { d[c] = function () { call2_args = arguments; call2 = [c].concat(Array.prototype.slice.call(call2_args, 0)); a.push([e, call2]); }; } for ( var d = {}, e = ["get_group"].concat(Array.prototype.slice.call(arguments, 0)), c = 0; c < j.length; c++) b(j[c]); return d; }; b._i.push([e, f, c]); }; b.__SV = 1.2; e = f.createElement("script"); e.type = "text/javascript"; e.async = !0; e.src = "//cdn.mxpnl.com/libs/mixpanel-2-latest.min.js"; g = f.getElementsByTagName("script")[0]; g.parentNode.insertBefore(e, g); } })(document, window.mixpanel || []);
-</script>
-```
-
-**Or install via npm:**
+**Install via npm (recommended):**
 
 ```bash
 npm install mixpanel-browser
+```
+
+**Or install via CDN (paste before closing `</head>` tag):**
+
+```html
+<script src="https://cdn.mxpnl.com/libs/mixpanel-2-latest.min.js"></script>
 ```
 
 **Initialize:**
@@ -1556,6 +1556,13 @@ mixpanel.register({ plan_type: user.plan }); // also set as super property
 // On logout — clears local storage and generates a new $device_id
 mixpanel.reset();
 ```
+
+**Deprecated Methods — Do Not Use:**
+
+| Method | Status | What to do instead |
+|---|---|---|
+| `mixpanel.alias()` | Do not call — not expected to be called by customers under any ID merge mode. Under Original ID Merge, call `identify()` only. Under Simplified API, `alias()` has no role. | `mixpanel.identify(user.id)` |
+| `mixpanel.people.track_charge()` | Deprecated and non-functional — prints a console error and does nothing. | Use Mixpanel's built-in revenue analysis or track revenue as a standard event property. |
 
 ---
 

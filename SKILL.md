@@ -564,11 +564,23 @@ Store all confirmed answers in the Context Block. They gate which content you su
 
 **Steps in order:**
 
-**A. Verify Simplified ID Merge** (non-negotiable first step)
+**A. Verify Identity Management setting** (non-negotiable first step)
 
 - Project Settings → Identity Management → confirm "Simplified API"
-- If it shows "Original API" and no data has been tracked yet: switch it before proceeding
-- If data has already been tracked under Original API: do not switch without reading the migration guide
+- If it shows **Simplified API**: proceed normally.
+- If it shows **Original ID Merge**: do NOT immediately push to switch. Ask first:
+
+  > "Do you have a specific need to merge two already-identified users together — for example, two separate accounts that belong to the same person?"
+
+  | Answer | Action |
+  |---|---|
+  | No, and no data tracked yet | Recommend switching to Simplified API — walk through the steps. This is the right default. |
+  | No, but data already tracked | Flag limitations (500 ID cluster limit, random canonical ID, anon IDs must be UUID). Link the [Identity Migration Guide](https://docs.mixpanel.com/docs/tracking-methods/id-management/migrating-to-simplified-id-merge-system). Recommend contacting Mixpanel support before proceeding. Do not implement until resolved. |
+  | Yes — merging two identified users | Original ID Merge is valid for this use case (Simplified API cannot merge two `$user_id` values). Proceed with Original ID Merge. Note constraints: 500 ID cluster limit, anon IDs must be UUID, canonical ID is randomly assigned. |
+
+  **In ALL Original ID Merge cases:** Customers call `identify()` only — never `alias()`. The `alias()` method exists in the SDK but is not expected to be called by customers and causes silent identity fragmentation if called incorrectly. Do not generate `alias()` calls.
+
+  > Note: "Original ID Merge" and "Legacy ID Merge" are not the same thing. Do not conflate them.
 
 **B. Determine project structure** (before creating anything)
 
@@ -604,7 +616,7 @@ If the customer cannot provide tokens yet (e.g., someone else owns the Mixpanel 
 
 **E.** Assign minimum-necessary roles: Owner, Admin, Analyst, Consumer.
 
-**Output of this phase:** Simplified ID Merge verified, project structure decided, dev and production projects created, both tokens stored in the Context Block, EU/CA flag noted, roles assigned. Required before Phase 3.
+**Output of this phase:** Identity management setting verified (Simplified API confirmed, or Original ID Merge use case documented), project structure decided, dev and production projects created, both tokens stored in the Context Block, EU/CA flag noted, roles assigned. Required before Phase 3.
 
 ### Phase 3 — Data Model
 
@@ -814,6 +826,8 @@ On logout              → mixpanel.reset()
 **Full client-side flow** (signup → logout → re-open) is in `reference.md § Phase 8 — Client-Side Identity Flow`.
 
 **Identity checklist (quick validation):** Before proceeding, confirm: `identify()` was called on login/signup; profile attributes use `people.set()` not `track()`; `identify()` on re-open when already logged in (not every page load); stable unique ID (not email/device). Full checklist and QA: `reference.md § Phase 8`.
+
+**`alias()` is never generated here.** Under Simplified API it has no role. Under Original ID Merge, customers call `identify()` only — `alias()` is not expected to be called by customers under either system.
 
 **QA before production:** Run the ID Management QA Checklist from `reference.md § Phase 8`.
 
@@ -1117,6 +1131,12 @@ Get these wrong and the data is permanently corrupted or very expensive to fix. 
 - Track the `sign_up_completed` event AFTER `.identify()`, not before
 - Never merge two `$user_id` values — not supported in Simplified API; use one stable ID from the start
 - Do not create User Profiles for anonymous users
+- Never generate or recommend `alias()` — under either Simplified or Original ID Merge, customers call `identify()` only; `alias()` is not expected to be called and causes silent identity fragmentation if misused
+
+**Deprecated methods:**
+
+- Never generate or recommend `mixpanel.alias()` — see identity management rule above
+- Never generate or recommend `mixpanel.people.track_charge()` — this method is deprecated and non-functional; it prints a console error and does nothing; do not mention it as a revenue tracking solution
 
 **Data model:**
 
