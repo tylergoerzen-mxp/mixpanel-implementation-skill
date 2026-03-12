@@ -43,10 +43,30 @@ State the selected mode explicitly and offer to switch at any point.
 
 | Mode | What it covers | Detail section |
 |---|---|---|
-| **Quick Start** | 7-step compressed flow: mandatory questions → context → mini tracking plan → project setup → implementation + identity → Live View verification → wrap-up | Quick Start Flow (below) |
+| **Quick Start** | 7-step compressed flow: mandatory questions → context → mini tracking plan → project setup → implementation + identity → Mixpanel verification → wrap-up | Quick Start Flow (below) |
 | **Full Implementation** | All 8 phases (0–7) in order: Discovery → Analytics Strategy → Project Setup → Data Model → Tracking Plan → Implementation → Identity Management → Data Governance | Full Greenfield Rollout (below) |
 | **Add Tracking** | Starts with "what do you want to track?" → checks existing schema → designs new events → implements and verifies | Add Tracking Mode (below) |
 | **Audit** | Diagnoses current state → produces prioritized fixes → executes fixes via Add Tracking or Full Implementation | Implementation Audit Mode (below) |
+
+### Critical risk handling
+
+When the agent discovers a critical issue that will cause data corruption, compliance violation, or architectural mismatch:
+
+**Critical issues (require strong warning + explicit user override):**
+- Wrong ID Merge mode with significant data already tracked (e.g., Original ID Merge with 10K+ users when user doesn't need to merge two identified users)
+- Consent violations (tracking EU/CA users before consent gate in place)
+- CDP architectural mismatch (installing direct SDK when Segment/Rudderstack is already routing data)
+- Identity configuration that will fragment user profiles (e.g., using email as user_id when emails are mutable)
+
+**When a critical issue is detected:**
+
+1. **Stop current workflow** - Do not proceed with the next phase
+2. **Explain the specific harm** - "This will cause [concrete bad outcome]: [detailed explanation]"
+3. **Recommend the fix** - "I recommend we [specific corrective action] before proceeding"
+4. **Offer explicit override** - "Do you want to proceed anyway, or pause to address this first?"
+5. **If user overrides** - Document the risk in Context Block and continue, but remind before deployment: "Remember: [issue] is still present. This will cause [harm] in production."
+
+This is NOT a hard block — the user can override if they have context the agent doesn't. But the agent must surface the risk clearly before proceeding.
 
 ### Mode switching rules
 
@@ -101,12 +121,41 @@ Present assumptions to the customer rather than asking from scratch. Only ask wh
 
 ---
 
+## Confirmation Protocol
+
+**Critical rule**: Even when Pre-Flight scan or research provides answers, ALWAYS present assumptions to the user and ask for confirmation before proceeding.
+
+**What this means**:
+- ✅ "Based on your codebase, I see you're using React with TypeScript. Is that correct?"
+- ✅ "Your package.json shows Segment is installed. Are you routing analytics through Segment?"
+- ✅ "From your routes, it looks like the Value Moment is when a user creates a project. Does that sound right?"
+- ❌ "I scanned your codebase and know everything I need." [then proceeds without asking]
+- ❌ [Silently assumes platform is web because package.json exists]
+
+**When Pre-Flight scan was run**:
+1. Lead with assumptions: "Based on your codebase, here's what I found: [platform], [CDP status if detected], [candidate Value Moment]. Does this match your understanding?"
+2. Ask about what the codebase CANNOT answer: EU/CA users, business priorities, Value Moment confirmation (even if you have a candidate)
+3. Never skip mandatory questions (platform, CDP, EU/CA, Value Moment) — even if you think you know the answer, confirm it
+
+**When research was run** (Full Implementation Discovery):
+1. Present business model summary: "Based on [sources], here's how I understand your business: [summary]. Does that framing sound right?"
+2. Ask remaining questions that research couldn't definitively answer
+3. If research was inconclusive or contradictory, switch to direct questions rather than making assumptions
+
+**When neither Pre-Flight nor research available**:
+1. Ask all mandatory questions directly
+2. Do not guess or infer from project names, folder structures, or partial clues
+
+**Why this matters**: A wrong assumption about platform, CDP, or consent creates one-way doors that require full rewrites. Spending 30 seconds to confirm saves hours of rework.
+
+---
+
 ## Quick Start Flow
 
 **Success criteria:** A Quick Start session is successful when:
 - Two events (`sign_up_completed` + Value Moment) are defined with a mini tracking plan
 - Tracking code is written and placed
-- At least one event is confirmed in Live View
+- At least one event is visible in your Mixpanel project
 - Basic identity (identify on login, reset on logout) is wired in
 - Any hard blockers (consent, CDP routing) have been surfaced
 
@@ -137,7 +186,7 @@ In Quick Start mode:
 **Do include during implementation:**
 - Consent gate if EU/CA users (before SDK init)
 - Basic identity (identify on login/signup, reset on logout)
-- Live View verification
+- Mixpanel verification
 
 **Surface after implementation (as next steps, not gates):**
 - Expanded tracking plan
@@ -244,9 +293,8 @@ Present both to the user for confirmation. This is a lightweight review, not a f
 ### Step 4 — Project Setup (Minimal)
 
 For Quick Start:
-- Confirm the user has one Mixpanel project with a token
-- If they can't find it: direct them to mixpanel.com → Project Settings → Project Token
-- Store the token in the Context Block
+- **If the user provided a project token in their initial prompt**: Store it in the Context Block and proceed. Most users copy-paste from the Mixpanel UI setup instructions which include the token.
+- **If no token was provided**: Ask: "I'll need your Mixpanel project token. You'll find it at mixpanel.com → Project Settings → Project Token."
 - Move on
 
 **Do NOT require for Quick Start:**
@@ -321,61 +369,22 @@ If any signals are present, the agent says:
 
 This is an offer, not a gate. The user decides.
 
-### Step 7 — Verify in Live View
+### Step 7 — Verify Events in Mixpanel
 
 - Deploy to dev environment (or local if no dev exists)
-- Open Mixpanel Live View
+- Go to https://mixpanel.com and open your project
+- Navigate to Events (in the left sidebar)
 - Trigger both events
 - Confirm they appear with correct properties
 - Confirm identity is linking events to the user
 
-**Do not proceed to "what's next" until at least one event is confirmed in Live View.**
+**Do not proceed to "what's next" until at least one event is confirmed visible in your Mixpanel project.**
 
-### Developer Handoff Spec Generation (No Codebase Access Mode)
+### Developer Handoff (No Codebase Access)
 
-**When to use:** User went through Quick Start discovery and planning but doesn't have codebase access (marked with `handoff_mode: true` at Codebase Access Check).
+**When triggered**: User answered "gathering specs for handoff" at Step 5 (Codebase Access Check).
 
-**Generate:** `MIXPANEL_IMPLEMENTATION_SPEC.md` using the template in `reference.md § Developer Handoff Specification Template`.
-
-**Required content (from Quick Start Context Block):**
-- All context gathered during Steps 1-4
-- Platform, SDK, tracking method, CDP, consent requirements
-- Complete tracking plan: `sign_up_completed` + Value Moment event with full property schemas
-- SDK installation commands
-- Complete initialization code (with consent gate if required)
-- Complete code snippets for both events (not patterns — actual ready-to-use code with real token)
-- Identity flow: where and when to call identify() and reset() with file location hints
-- Business context: Value Moment explanation, why it matters, priority
-- Step-by-step verification guide with expected Live View results
-- Troubleshooting section for common issues
-
-**Fill in the template with:**
-- Actual project token (from Step 4)
-- Real event names and properties (from Step 3)
-- Complete SDK initialization code with platform-specific syntax
-- Identity flow code with file hints ("in your auth callback / logout handler")
-- Business context for why Value Moment matters
-- Next steps recommendations (expand tracking, full ID QA, dev/prod split, governance)
-
-**Save to:** User's current working directory (or ~/Downloads if working directory is unclear).
-
-**Presentation:**
-> "I've created a complete implementation specification at [absolute path]. This contains:
-> - Complete, copy-paste ready code with your actual project token
-> - Step-by-step testing instructions with expected Live View results
-> - Business context explaining why [Value Moment] matters
-> - Troubleshooting guide for common issues
->
-> Share this with your developer — they won't need any context from our conversation. The spec includes everything needed to implement in 2-4 hours."
-
-**Optional additional artifacts:**
-- CSV export of tracking plan (for product managers who prefer spreadsheets)
-- Code-only snippets file (for quick reference)
-
-**After generating spec:**
-- Skip Step 7 (Verify in Live View) — developer will do this after implementation
-- Skip AGENTS.md creation in Step 8 (it's included in the handoff spec as a template)
-- Present next steps modified for handoff context: "After your developer implements this..."
+Follow the **Developer Handoff Specification** section (below Implementation Audit Mode) using Quick Start mode parameters.
 
 ### Step 8 — Quick Start Wrap-Up
 
@@ -412,13 +421,13 @@ Offer additional support:
 
 3. **Schedule follow-up?**
    - After your developer implements, we can:
-     - Verify events in Live View together
+     - Verify events in your Mixpanel project together
      - Walk through any issues they encountered
      - Set up Lexicon and Data Standards
 
 Present prioritized next steps (modified for handoff context):
 
-1. **After your developer implements** — Schedule a follow-up to verify events in Live View
+1. **After your developer implements** — Schedule a follow-up to verify events in your Mixpanel project
 2. **Add more events** — Expand tracking plan from the 2-event foundation (can create another handoff spec)
 3. **Full identity QA** — Test anonymous bridging, multi-device, edge cases (spec includes ID QA checklist)
 4. **Dev/prod project split** — Create a separate dev project before sending production traffic
@@ -578,7 +587,7 @@ Store all confirmed answers in the Context Block. They gate which content you su
   | No, but data already tracked | Flag limitations (500 ID cluster limit, random canonical ID, anon IDs must be UUID). Link the [Identity Migration Guide](https://docs.mixpanel.com/docs/tracking-methods/id-management/migrating-to-simplified-id-merge-system). Recommend contacting Mixpanel support before proceeding. Do not implement until resolved. |
   | Yes — merging two identified users | Original ID Merge is valid for this use case (Simplified API cannot merge two `$user_id` values). Proceed with Original ID Merge. Note constraints: 500 ID cluster limit, anon IDs must be UUID, canonical ID is randomly assigned. |
 
-  **In ALL Original ID Merge cases:** Customers call `identify()` only — never `alias()`. The `alias()` method exists in the SDK but is not expected to be called by customers and causes silent identity fragmentation if called incorrectly. Do not generate `alias()` calls.
+  **In ALL Original ID Merge cases:** Customers call `identify()` only.
 
   > Note: "Original ID Merge" and "Legacy ID Merge" are not the same thing. Do not conflate them.
 
@@ -599,9 +608,11 @@ This determines how many projects to create in the next step.
 - If step B determined multiple production projects are needed, create each with the same naming pattern
 - Use environment-based config to switch tokens automatically → see `reference.md § Phase 2` for JS example
 
-**D. Collect project tokens — ask the customer to provide them now**
+**D. Collect project tokens**
 
-Once dev and production projects exist, ask:
+**If the user provided tokens in their initial prompt**: Store them in the Context Block. Most users copy-paste from Mixpanel setup instructions which include the token(s).
+
+**If no tokens were provided yet**, ask:
 
 > "Can you copy the project token for each project? You'll find them at mixpanel.com → your project → Project Settings → Project Token. Paste both here and I'll inject them directly into the initialization code — no manual search-and-replace needed."
 
@@ -614,7 +625,19 @@ Once dev and production projects exist, ask:
 
 If the customer cannot provide tokens yet (e.g., someone else owns the Mixpanel account): proceed with placeholder values and flag that tokens must be substituted before any events are sent.
 
-**E.** Assign minimum-necessary roles: Owner, Admin, Analyst, Consumer.
+**E. Assign minimum-necessary roles and identify governance owner (recommended)**
+
+Assign Mixpanel product roles: Owner, Admin, Analyst, Consumer.
+
+**Governance role recommendation** (not required, but prevents approval bottlenecks later):
+
+Ask: "Who will approve new events before they go live — a PM, data lead, or engineering manager?"
+
+If the user names someone: Store as "Data Owner" in Context Block. This person will review the tracking plan in Phase 4 before implementation.
+
+If the user says "I'll figure that out later": Note it and move on. Full governance setup happens in Phase 8.
+
+**Why this matters**: Phase 4 creates a tracking plan that needs sign-off before Phase 6 implementation. Knowing the approver upfront prevents "tracking plan is ready but we don't know who approves it" bottlenecks.
 
 **Output of this phase:** Identity management setting verified (Simplified API confirmed, or Original ID Merge use case documented), project structure decided, dev and production projects created, both tokens stored in the Context Block, EU/CA flag noted, roles assigned. Required before Phase 3.
 
@@ -785,11 +808,11 @@ Place each `track()` call as close to the triggering action as possible — in t
 
 **Server-side:** Forward client IP (`ip`) only when policy and consent rules permit geolocation enrichment. Always set `$insert_id` for deduplication. Parse User-Agent manually for `$browser`, `$os`, `$device`.
 
-**QA gate — verify before proceeding to Phase 7:** Ask the customer to deploy their current changes to the dev environment, open Mixpanel Live View (mixpanel.com → dev project → Live View), and confirm at least one event appears. Do not proceed to identity management until basic event ingestion is confirmed working. Debugging initialization and identity at the same time makes root-cause analysis very difficult.
+**QA gate — verify before proceeding to Phase 7:** Ask the customer to deploy their current changes to the dev environment, go to https://mixpanel.com → open their dev project → Events, and confirm at least one event appears in the Events page. Do not proceed to identity management until basic event ingestion is confirmed working. Debugging initialization and identity at the same time makes root-cause analysis very difficult.
 
-**Post-deploy verification (after each new event or batch):** Beyond Live View, confirm the event appears in Reports for the expected date range (e.g. run a segmentation or Insights query filtered by the event name and today's date). Check that key properties are populating with expected values. Event and property names are case-sensitive — zero results often mean a typo or casing mismatch. See `reference.md § Phase 8 — Post-Deploy Verification` for details.
+**Post-deploy verification (after each new event or batch):** Beyond the Events page, confirm the event appears in Reports for the expected date range (e.g. run a segmentation or Insights query filtered by the event name and today's date). Check that key properties are populating with expected values. Event and property names are case-sensitive — zero results often mean a typo or casing mismatch. See `reference.md § Phase 8 — Post-Deploy Verification` for details.
 
-**Output of this phase:** All tracking and initialization code written and placed in the codebase. At least one event confirmed arriving in Mixpanel Live View. Customer ready to wire up identity calls.
+**Output of this phase:** All tracking and initialization code written and placed in the codebase. At least one event confirmed arriving in your Mixpanel project. Customer ready to wire up identity calls.
 
 ### Phase 7 — Identity Management
 
@@ -827,64 +850,15 @@ On logout              → mixpanel.reset()
 
 **Identity checklist (quick validation):** Before proceeding, confirm: `identify()` was called on login/signup; profile attributes use `people.set()` not `track()`; `identify()` on re-open when already logged in (not every page load); stable unique ID (not email/device). Full checklist and QA: `reference.md § Phase 8`.
 
-**`alias()` is never generated here.** Under Simplified API it has no role. Under Original ID Merge, customers call `identify()` only — `alias()` is not expected to be called by customers under either system.
-
 **QA before production:** Run the ID Management QA Checklist from `reference.md § Phase 8`.
 
 **Output of this phase:** Identity calls (`identify`, `reset`) placed in the correct locations. ID Management QA checklist passed in dev before any production deployment. Required before Phase 8.
 
-### Developer Handoff Spec Generation (No Codebase Access Mode)
+### Developer Handoff (No Codebase Access)
 
-**When to use:** User went through Full Implementation (Phases 0-4) but doesn't have codebase access (marked with `handoff_mode: true` at Codebase Access Check).
+**When triggered**: User answered "gathering specs for handoff" at Phase 5 (Codebase Access Check).
 
-**Generate:** `MIXPANEL_IMPLEMENTATION_SPEC.md` using the template in `reference.md § Developer Handoff Specification Template`.
-
-**Required content (from Full Implementation Context Block):**
-- All context gathered during Phases 0-4
-- Platform(s), SDK(s), tracking method, CDP, consent requirements
-- Complete tracking plan: all events with full property schemas (not just 2 events)
-- SDK installation commands for each platform
-- Complete initialization code (with consent gate if required)
-- Complete code snippets for all events (not patterns — actual ready-to-use code with real tokens)
-- Identity flow: where and when to call identify() and reset() with file location hints
-- Business context: Value Moment, KPIs, OKRs, commercial priority
-- Event priority ranking (what to implement first if time-limited)
-- Step-by-step verification guide with expected Live View results
-- Troubleshooting section for common issues
-- Governance setup instructions (Lexicon, Data Standards, Event Approval, roles)
-
-**Fill in the template with:**
-- Actual project tokens (dev + prod from Phase 2)
-- Real event names and properties from full tracking plan (Phase 4)
-- Complete SDK initialization code with platform-specific syntax
-- Identity flow code with file hints
-- Business context: Value Moment rationale, KPI alignment, priority ranking
-- Group Analytics setup if applicable (Phase 0 context)
-- Multi-platform integration if applicable
-- Governance checklist with role assignments (Phase 8 preparation)
-
-**Save to:** User's current working directory (or ~/Downloads if working directory is unclear).
-
-**Presentation:**
-> "I've created a complete implementation specification at [absolute path]. This contains:
-> - Complete, copy-paste ready code for [N] events with your actual project tokens
-> - Priority ranking: implement these [X] events first, then these [Y], then these [Z]
-> - Step-by-step testing instructions with expected Live View results
-> - Business context explaining how each event ties to your [OKR/KPIs/Value Moment]
-> - Governance setup checklist (Lexicon, Data Standards, Event Approval, role assignments)
-> - Troubleshooting guide for common issues
->
-> Share this with your developer — they won't need any context from our conversation. The spec includes everything needed to implement in 1-2 days."
-
-**Optional additional artifacts:**
-- CSV export of complete tracking plan (for product managers who prefer spreadsheets)
-- Code-only snippets file (for quick reference)
-
-**After generating spec:**
-- Skip Phase 6 implementation (developer will do this)
-- Skip Phase 7 identity verification (included in spec as implementation steps)
-- Skip AGENTS.md creation (it's included in the handoff spec as a template)
-- Modify Phase 8 presentation: explain that governance setup is included in the spec but should happen AFTER developer implements
+Follow the **Developer Handoff Specification** section (below Implementation Audit Mode) using Full Implementation mode parameters.
 
 ### Phase 8 — Data Governance
 
@@ -971,7 +945,7 @@ Remind about governance:
 Offer follow-up support:
 
 1. **After implementation** — Schedule a session to:
-   - Verify all events in Live View together
+   - Verify all events in your Mixpanel project together
    - Walk through governance setup (Lexicon, Data Standards, Event Approval)
    - Run the ID Management QA checklist
    - Review first week of data for anomalies
@@ -1005,7 +979,7 @@ Use when the customer has an existing Mixpanel implementation and wants to exten
 
 4. **Implement** — Write tracking calls using the same SDK and patterns already present in the codebase. If Pre-Flight was run, place code in the exact handler/endpoint files.
 
-5. **Verify** — Confirm events in Live View with correct properties and identity linkage.
+5. **Verify** — Confirm events in your Mixpanel project with correct properties and identity linkage.
 
 6. **Document** — Add Lexicon descriptions for all new events and properties. Update `AGENTS.md` in the project root with the new Mixpanel events (add rows to the tracking plan table).
 
@@ -1035,11 +1009,154 @@ Rank issues by severity:
 
 **Execute fixes** via Add Tracking mode (for individual events) or Full Implementation mode (for structural overhaul).
 
+**Deliverable: Generate MIXPANEL_AUDIT_REPORT.md**
+
+After diagnosing current state, generate a structured audit report for the customer.
+
+**Report structure:**
+
+```markdown
+# Mixpanel Implementation Audit Report
+
+**Project**: [name]
+**Audit Date**: [date]
+**Audited By**: [user or team name if known]
+
+## Current State Summary
+
+- **Total events tracked**: [count from Lexicon]
+- **Events with descriptions**: [count / total]
+- **Identity method**: [Simplified API | Original ID Merge]
+- **Compliance posture**: [consent gated | not gated] for [region]
+- **Traffic volume**: [daily event count if observable]
+- **Tracking plan exists**: [yes | no | partial]
+
+## Issues Found
+
+### Critical (Data Corruption / Compliance Risk)
+
+- [ ] **[Issue name]**: [Detailed description of what's wrong and what harm it causes]
+  - **Impact**: [Specific bad outcome]
+  - **Fix**: [Specific remediation steps]
+  - **Effort**: [Estimated time/complexity]
+
+[Repeat for each critical issue]
+
+### High (Data Quality)
+
+[Same structure as Critical]
+
+### Medium (Maintainability)
+
+[Same structure as Critical]
+
+### Low (Optimization)
+
+[Same structure as Critical]
+
+## Remediation Plan
+
+**Recommended sequence** (fix in this order to minimize rework):
+
+1. **[Critical Issue 1]** — [Why this must be fixed first]
+2. **[Critical Issue 2]** — [Dependency or risk rationale]
+3. **[High Issue 1]** — [Impact on data quality]
+...
+
+**Total estimated effort**: [X hours/days for all fixes]
+
+## Next Steps
+
+1. **Immediate** (this week): Fix critical issues [list]
+2. **Short-term** (this month): Address high-priority data quality issues
+3. **Ongoing** (this quarter): Governance and maintainability improvements
+
+## Remediation Mode Selection
+
+- **For individual event fixes** (< 10 events to fix, naming/property issues): Use **Add Tracking** mode
+- **For structural overhaul** (wrong ID Merge mode, broken identity, no tracking plan, >50% events malformed): Use **Full Implementation** mode to rebuild correctly
+
+---
+
+**Report generated**: [timestamp]
+```
+
+**Save to**: User's current working directory as `MIXPANEL_AUDIT_REPORT.md`
+
+**After generating report**: Ask customer "Which critical issue should we tackle first?" and route to appropriate remediation mode (Add Tracking or Full Implementation).
+
+---
+
+## Developer Handoff Specification (No Codebase Access)
+
+**When to use**: User completed discovery and planning (Quick Start Steps 1-4 OR Full Implementation Phases 0-4) but doesn't have codebase access.
+
+**Trigger**: Set `handoff_mode: true` at Codebase Access Check.
+
+**Generate**: `MIXPANEL_IMPLEMENTATION_SPEC.md` using the template in `reference.md § Developer Handoff Specification Template`.
+
+### Content Requirements (Mode-Dependent)
+
+**ALL modes must include:**
+- Platform(s), SDK(s), tracking method, CDP status, consent requirements
+- SDK installation commands for each platform
+- Complete initialization code (with consent gate if required)
+- Complete code snippets for events (not patterns — actual ready-to-use code with real tokens)
+- Identity flow: where and when to call identify() and reset() with file location hints
+- Step-by-step verification guide with expected results in Mixpanel
+- Troubleshooting section for common issues
+
+**Quick Start mode adds:**
+- Mini tracking plan: `sign_up_completed` + Value Moment event with full property schemas (2 events only)
+- Business context: Value Moment explanation, why it matters, priority
+- AGENTS.md template (for future AI agents to know Mixpanel is installed)
+- Next steps: expand tracking, full ID QA, dev/prod split, governance
+
+**Full Implementation mode adds:**
+- Complete tracking plan: all events from Phase 4 with full property schemas
+- Business context: Value Moment, KPIs, OKRs, commercial priority from Phase 1
+- Event priority ranking (what to implement first if time-limited)
+- Governance setup instructions (Lexicon, Data Standards, Event Approval, role assignments from Phase 2)
+- Group Analytics setup if applicable (Phase 0 context)
+- Multi-platform integration if applicable
+
+### Template Fill Instructions
+
+**Fill with actual values from Context Block:**
+- Real project token(s) (dev + prod for Full Implementation, single for Quick Start)
+- Real event names and properties from tracking plan
+- Platform-specific SDK initialization code
+- Identity flow code with file location hints (from Pre-Flight scan if available)
+
+**Save to**: User's current working directory (or ~/Downloads if unclear)
+
+### Presentation
+
+> "I've created a complete implementation specification at [absolute path]. This contains:
+> - Complete, copy-paste ready code for [N] events with your actual project token(s)
+> [if Full Implementation:] - Priority ranking: implement these [X] events first, then these [Y], then these [Z]
+> - Step-by-step testing instructions with expected results
+> - Business context explaining [Quick Start: why Value Moment matters | Full Implementation: how each event ties to your KPIs/OKRs]
+> [if Full Implementation:] - Governance setup checklist (Lexicon, Data Standards, Event Approval, role assignments)
+> - Troubleshooting guide for common issues
+>
+> Share this with your developer — they won't need any context from our conversation. The spec includes everything needed to implement in [Quick Start: 2-4 hours | Full Implementation: 1-2 days]."
+
+### After Handoff Spec Generation
+
+**Quick Start**: Skip verification in Mixpanel (Step 7) — developer will do this after implementation. Skip AGENTS.md creation (included in spec as template). Present next steps modified for handoff: "After your developer implements this..."
+
+**Full Implementation**: Skip Phase 6 implementation. Skip Phase 7 identity verification (included in spec). Skip AGENTS.md creation (included in spec). Modify Phase 8 presentation: explain that governance setup is included in the spec but should happen AFTER developer implements.
+
+**Optional artifacts** (offer to customer):
+- CSV export of tracking plan (for product managers who prefer spreadsheets)
+- Code-only snippets file (for quick developer reference)
+
 ---
 
 ## Phase Exit Checklists (Gate Review)
 
-These checklists apply to Full Implementation mode. Quick Start uses Live View verification as its primary gate.
+These checklists apply to Full Implementation mode. Quick Start uses Mixpanel verification as its primary gate.
 
 **Phase 0 exit**
 
@@ -1073,7 +1190,7 @@ These checklists apply to Full Implementation mode. Quick Start uses Live View v
 **Phase 6 exit**
 
 - Initialization and event calls implemented in codebase.
-- At least one event observed in dev Live View.
+- At least one event observed in the dev project.
 - Tracking path (SDK/CDP/warehouse) matches discovery decisions.
 
 **Phase 7 exit**
@@ -1131,11 +1248,10 @@ Get these wrong and the data is permanently corrupted or very expensive to fix. 
 - Track the `sign_up_completed` event AFTER `.identify()`, not before
 - Never merge two `$user_id` values — not supported in Simplified API; use one stable ID from the start
 - Do not create User Profiles for anonymous users
-- Never generate or recommend `alias()` — under either Simplified or Original ID Merge, customers call `identify()` only; `alias()` is not expected to be called and causes silent identity fragmentation if misused
 
 **Deprecated methods:**
 
-- Never generate or recommend `mixpanel.alias()` — see identity management rule above
+- Never generate or recommend `mixpanel.alias()` — under either Simplified or Original ID Merge, customers call `identify()` only; `alias()` is not expected to be called and causes silent identity fragmentation if misused
 - Never generate or recommend `mixpanel.people.track_charge()` — this method is deprecated and non-functional; it prints a console error and does nothing; do not mention it as a revenue tracking solution
 
 **Data model:**
