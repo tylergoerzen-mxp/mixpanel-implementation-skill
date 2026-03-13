@@ -1561,7 +1561,7 @@ mixpanel.reset();
 
 | Method | Status | What to do instead |
 |---|---|---|
-| `mixpanel.alias()` | Do not call — not expected to be called by customers under any ID merge mode. Under Original ID Merge, call `identify()` only. Under Simplified API, `alias()` has no role. | `mixpanel.identify(user.id)` |
+| `mixpanel.alias()` | **Never call.** The pattern `get_distinct_id() → identify() → alias()` is wrong under all ID merge modes. Under Simplified API, `identify()` alone bridges anonymous and identified sessions. Under Original ID Merge, `identify()` alone is also correct — `alias()` is not part of the customer-facing identity flow and causes silent identity fragmentation if called. | `mixpanel.identify(user.id)` only — no `alias()`, no `get_distinct_id()` for identity purposes |
 | `mixpanel.people.track_charge()` | Deprecated and non-functional — prints a console error and does nothing. | Use Mixpanel's built-in revenue analysis or track revenue as a standard event property. |
 
 ---

@@ -844,6 +844,20 @@ On logout              → mixpanel.reset()
 4. Update super properties via `.register()`
 5. Track `sign_up_completed` event (AFTER identify — so it's attributed correctly)
 
+**NEVER generate this pattern — it is wrong for all ID merge modes:**
+```javascript
+// WRONG — do not write this
+const anonymousId = mixpanel.get_distinct_id();
+mixpanel.identify(user.id);
+mixpanel.alias(user.id, anonymousId); // ← alias() must never be called
+```
+**Correct — identify() alone is sufficient:**
+```javascript
+// RIGHT
+mixpanel.identify(user.id); // SDK bridges anonymous and identified sessions automatically
+```
+This applies to both Simplified API and Original ID Merge. `alias()` is not part of the customer-facing identity flow under either system.
+
 **Server-side identity:** SDKs do not auto-generate `$device_id`. Store a UUID in a cookie. Pass `$device_id` on every pre-login event. Pass both `$device_id` and `$user_id` on the first post-login event. See `reference.md § Phase 8 — Server-Side Identity Flow` for full Python example.
 
 **Full client-side flow** (signup → logout → re-open) is in `reference.md § Phase 8 — Client-Side Identity Flow`.
