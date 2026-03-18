@@ -23,15 +23,13 @@ Use this section in Quick Start mode to reach working code fast. Each platform h
 ### JavaScript (Browser) — Quick Start
 
 ```javascript
-// 1. Init — install via npm: npm install mixpanel-browser
-import mixpanel from 'mixpanel-browser';
+// 1. Init — add <script src="https://cdn.mxpnl.com/libs/mixpanel-2-latest.min.js"></script> first
 mixpanel.init('YOUR_PROJECT_TOKEN', { debug: true });
-// CDN alternative: <script src="https://cdn.mxpnl.com/libs/mixpanel-2-latest.min.js"></script>
 
 // 2. Track
-mixpanel.track('sign_up_completed', {
-  sign_up_method: 'email',
-  platform: 'web'
+mixpanel.track('Sign Up Completed', {
+  'Sign Up Method': 'email',
+  'Platform': 'web'
 });
 
 // 3. Identity
@@ -55,9 +53,9 @@ from mixpanel import Mixpanel
 mp = Mixpanel('YOUR_PROJECT_TOKEN')
 
 # Track
-mp.track(user_id, 'sign_up_completed', {
-    'sign_up_method': 'email',
-    'platform': 'web',
+mp.track(user_id, 'Sign Up Completed', {
+    'Sign Up Method': 'email',
+    'Platform': 'web',
     '$insert_id': unique_dedup_key
 })
 
@@ -76,10 +74,10 @@ const Mixpanel = require('mixpanel');
 const mixpanel = Mixpanel.init('YOUR_PROJECT_TOKEN');
 
 // Track
-mixpanel.track('sign_up_completed', {
+mixpanel.track('Sign Up Completed', {
   distinct_id: userId,
-  sign_up_method: 'email',
-  platform: 'web',
+  'Sign Up Method': 'email',
+  'Platform': 'web',
   $insert_id: uniqueDedupKey
 });
 
@@ -96,7 +94,7 @@ const mixpanel = new Mixpanel('YOUR_PROJECT_TOKEN', true);
 await mixpanel.init();
 
 // Track
-mixpanel.track('sign_up_completed', { sign_up_method: 'email', platform: 'mobile' });
+mixpanel.track('Sign Up Completed', { 'Sign Up Method': 'email', 'Platform': 'mobile' });
 
 // Identity
 mixpanel.identify(user.id);
@@ -112,9 +110,9 @@ import Mixpanel
 Mixpanel.initialize(token: "YOUR_PROJECT_TOKEN", trackAutomaticEvents: true)
 
 // Track
-Mixpanel.mainInstance().track(event: "sign_up_completed", properties: [
-    "sign_up_method": "email",
-    "platform": "ios"
+Mixpanel.mainInstance().track(event: "Sign Up Completed", properties: [
+    "Sign Up Method": "email",
+    "Platform": "ios"
 ])
 
 // Identity
@@ -132,9 +130,9 @@ val mixpanel = MixpanelAPI.getInstance(context, "YOUR_PROJECT_TOKEN", true)
 
 // Track
 val props = JSONObject()
-props.put("sign_up_method", "email")
-props.put("platform", "android")
-mixpanel.track("sign_up_completed", props)
+props.put("Sign Up Method", "email")
+props.put("Platform", "android")
+mixpanel.track("Sign Up Completed", props)
 
 // Identity
 mixpanel.identify(user.id)
@@ -151,9 +149,9 @@ import 'package:mixpanel_flutter/mixpanel_flutter.dart';
 final mixpanel = await Mixpanel.init('YOUR_PROJECT_TOKEN', trackAutomaticEvents: true);
 
 // Track
-mixpanel.track('sign_up_completed', properties: {
-  'sign_up_method': 'email',
-  'platform': 'flutter'
+mixpanel.track('Sign Up Completed', properties: {
+  'Sign Up Method': 'email',
+  'Platform': 'flutter'
 });
 
 // Identity
@@ -170,14 +168,14 @@ mixpanel.reset();  // on logout
 curl -X POST https://api.mixpanel.com/track \
   -H 'Content-Type: application/json' \
   -d '[{
-    "event": "sign_up_completed",
+    "event": "Sign Up Completed",
     "properties": {
       "token": "YOUR_PROJECT_TOKEN",
       "distinct_id": "user-123",
       "time": 1740000000,
       "$insert_id": "unique-dedup-key",
-      "sign_up_method": "email",
-      "platform": "web"
+      "Sign Up Method": "email",
+      "Platform": "web"
     }
   }]'
 
@@ -298,7 +296,7 @@ This is the single most important user action we're tracking. When a user does t
 Not all events are equal. If engineering time is limited, implement in this order:
 
 1. **[Value Moment Event]** — HIGHEST priority. This is our Value Moment and powers [specific business metric].
-2. **sign_up_completed** — HIGH priority. Essential for measuring acquisition and identity linkage.
+2. **Sign Up Completed** — HIGH priority. Essential for measuring acquisition and identity linkage.
 [If Quick Start, stop here. If Full Implementation, continue with priority-ranked events 3-N]
 
 **Rationale:** Implementing these [2 / N] events first means we can measure [key metric] by [deadline/milestone].
@@ -358,7 +356,7 @@ Not all events are equal. If engineering time is limited, implement in this orde
 
 [One subsection per event]
 
-#### Event 1: sign_up_completed
+#### Event 1: Sign Up Completed
 
 **When to track:** After user account is successfully created in your database (not on form submit, not on button click — wait for DB confirmation)
 
@@ -375,21 +373,21 @@ Not all events are equal. If engineering time is limited, implement in this orde
 - Example showing where user data comes from]
 
 // Example:
-mixpanel.track('sign_up_completed', {
-  sign_up_method: user.authProvider,    // 'email', 'google', 'github'
-  platform: 'web',                       // or 'ios', 'android', etc.
-  is_first_time: true                    // always true for signup
+mixpanel.track('Sign Up Completed', {
+  'Sign Up Method': user.authProvider,  // 'email', 'google', 'github'
+  'Platform': 'web',                    // or 'ios', 'android', etc.
+  'Is First Visit': true                // always true for signup
 });
 ```
 
 **Properties explained:**
-- `sign_up_method` (string, required): How the user signed up. Possible values: [enum list]. This helps us understand which auth methods drive the highest activation.
-- `platform` (string, required): Where the signup occurred. Use: 'web', 'ios', 'android'. Powers platform-specific conversion analysis.
+- `Sign Up Method` (string, required): How the user signed up. Possible values: [enum list]. This helps us understand which auth methods drive the highest activation.
+- `Platform` (string, required): Where the signup occurred. Use: 'web', 'ios', 'android'. Powers platform-specific conversion analysis.
 [Continue for each property with business meaning]
 
 **Expected data in Mixpanel:**
 After implementation, you should see in Live View:
-- Event name: `sign_up_completed` (exact spelling, case-sensitive)
+- Event name: `Sign Up Completed` (exact spelling, case-sensitive)
 - Properties showing realistic values (not undefined/null)
 - Appears within 60 seconds of test signup
 - distinct_id is a device ID (before identify()) or user ID (after identify())
@@ -501,11 +499,11 @@ Before considering this complete:
    - Go to: [Mixpanel project URL if known, OR: "Mixpanel dashboard → Project Settings → Implementation → Live View"]
    - Keep this tab open while testing
 
-2. **Test Event 1: sign_up_completed**
+2. **Test Event 1: Sign Up Completed**
    - In your dev/staging environment: [trigger action — e.g., "create a new user account"]
    - Expected result in Live View (within 60 seconds):
-     - Event name: `sign_up_completed` (exact spelling)
-     - Properties: `sign_up_method`, `platform` with realistic values
+     - Event name: `Sign Up Completed` (exact spelling)
+     - Properties: `Sign Up Method`, `Platform` with realistic values
      - distinct_id: a device ID or anonymous ID (before identify())
 
 3. **Test Event 2: [Value Moment Event]**
@@ -551,7 +549,7 @@ mixpanel.track(eventName, properties);
 **Problem: Event names or properties are wrong**
 
 Possible causes:
-1. **Typo in event name** → Event names are case-sensitive: `sign_up_completed` ≠ `Sign_Up_Completed`
+1. **Typo in event name** → Event names are case-sensitive: `Sign Up Completed` ≠ `sign_up_completed`
 2. **Properties undefined** → Verify property values exist at the moment track() is called
 3. **Wrong data type** → Check Mixpanel Lexicon for expected types
 
@@ -588,28 +586,30 @@ All future Mixpanel events MUST follow these rules to maintain data quality:
 
 ### Event Names
 
-**Format:** `snake_case`
+**Default format:** Title Case (Start Case)
 
-**Structure:** past_tense_verb + noun
+**Structure:** Object Verb (noun first, then action)
 
 **Examples:**
-- ✅ `report_generated`, `item_added_to_cart`, `video_played`
-- ❌ `Generate Report`, `add-item`, `videoPlay`
+- ✅ `Report Generated`, `Item Added To Cart`, `Video Played`
+- ❌ abbreviations (`Btn Click`), platform jargon (`iOS Tap`), verb-first (`Generated Report`)
+
+**Other accepted formats:** snake_case, camelCase, PascalCase, kebab-case — any is valid as long as the project uses it consistently. If the project already has a convention in place, match it.
 
 ### Property Names
 
-**Format:** `snake_case`
+**Default format:** Title Case (Start Case)
 
-**Booleans:** `is_` prefix (e.g., `is_first_time`, `is_premium`)
+**Booleans:** `Is ` prefix (e.g., `Is First Visit`, `Is Premium`)
 
 **No abbreviations:** Write full words
-- ✅ `subscription_type`
-- ❌ `sub_type`
+- ✅ `Subscription Type`
+- ❌ `Sub Type`
 
 ### Why Standards Matter
 
 Inconsistent naming creates:
-- Duplicate metrics (users track both `user_signup` and `sign_up_completed` for the same action)
+- Duplicate metrics (users track both `User Signup` and `Sign Up Completed` for the same action)
 - Broken reports (queries fail when casing changes)
 - Unusable Lexicon (analysts can't find events)
 - Wasted engineering time (re-instrumenting to fix naming)
@@ -638,7 +638,7 @@ Never include in event properties:
 
 ⛔ **Do not fire events before actions succeed.**
 
-Track `report_generated` AFTER the report exists in your database, not when the user clicks "Generate Report."
+Track `Report Generated` AFTER the report exists in your database, not when the user clicks "Generate Report."
 
 **Why:** If you track on button click and the action fails (network error, validation failure), your metrics will be inflated with phantom events.
 
@@ -659,13 +659,13 @@ Each `mixpanel.track()` call is a network request.
 ```[language]
 // ❌ WRONG:
 items.forEach(item => {
-  mixpanel.track('item_processed', { item_id: item.id });
+  mixpanel.track('Item Processed', { 'Item ID': item.id });
 });
 
 // ✅ CORRECT:
-mixpanel.track('batch_processed', {
-  item_count: items.length,
-  item_ids: items.map(i => i.id).join(',')
+mixpanel.track('Batch Processed', {
+  'Item Count': items.length,
+  'Item IDs': items.map(i => i.id).join(',')
 });
 ```
 
@@ -765,14 +765,14 @@ After implementation, schedule a follow-up session to:
 
 | Event Name | Trigger | Properties | Data Types | Required | Business Purpose |
 |------------|---------|------------|------------|----------|------------------|
-| sign_up_completed | User account created in DB | sign_up_method, platform, is_first_time | string, string, boolean | Yes, Yes, No | Measures acquisition, establishes identity |
-| [value_moment_event] | [trigger] | [properties] | [types] | [required flags] | [business purpose] |
+| Sign Up Completed | User account created in DB | Sign Up Method, Platform, Is First Visit | string, string, boolean | Yes, Yes, No | Measures acquisition, establishes identity |
+| [Value Moment Event] | [trigger] | [properties] | [types] | [required flags] | [business purpose] |
 [... continue for all events]
 
 ### Property Enums
 
-**sign_up_method:** 'email', 'google', 'github', 'apple', 'sso'
-**platform:** 'web', 'ios', 'android', 'api'
+**Sign Up Method:** 'email', 'google', 'github', 'apple', 'sso'
+**Platform:** 'web', 'ios', 'android', 'api'
 [... continue for all enum properties]
 
 ---
@@ -842,7 +842,7 @@ Reach is the total number of users who have interacted with your product in a de
 - **SaaS:** users who logged in or created at least one record in the last 30 days
 - **E-commerce:** users who browsed or purchased in the last 90 days
 
-Reach sets the upper bound of who could possibly become activated or engaged. Tracking reach requires a `sign_up_completed` event and a session-start or login event.
+Reach sets the upper bound of who could possibly become activated or engaged. Tracking reach requires a `Sign Up Completed` event and a session-start or login event.
 
 #### Activation
 
@@ -897,7 +897,7 @@ Examples by vertical:
 | Fintech | Transaction initiated or report reviewed — weekly |
 | Mobile Game | Game session completed — daily |
 
-> **AGENT PROMPT:** Once the customer answers what their most important user action is, name their Value Moment explicitly. For example: "Based on what you've told me, your Value Moment is `report_generated` — weekly. This will be one of the first two events we track in Mixpanel."
+> **AGENT PROMPT:** Once the customer answers what their most important user action is, name their Value Moment explicitly. For example: "Based on what you've told me, your Value Moment is `Report Generated` — weekly. This will be one of the first two events we track in Mixpanel."
 
 ### Crafting Metrics That Are Actually Useful
 
@@ -989,7 +989,7 @@ Use this heuristic:
 | Same product, drastically different feature sets per platform | Single project with platform property for segmentation |
 
 For cross-platform projects, ensure:
-- Events that represent the same action across platforms use **identical event names** (capitalization matters: `purchase_completed` ≠ `Purchase_Completed`)
+- Events that represent the same action across platforms use **identical event names** (capitalization matters: `Purchase Completed` on web must match `Purchase Completed` on mobile — not `purchase_completed` or `PurchaseCompleted`)
 - User identity is consistent across platforms (covered in Phase 6)
 - A `platform` or `app_source` property is added as a super property to distinguish web vs. iOS vs. Android events
 
@@ -1031,7 +1031,7 @@ Properties   → Details about the what and who
 ```
 
 Every event has three required fields:
-- **Event Name** — a string describing the action (`checkout_completed`)
+- **Event Name** — a string describing the action (`Checkout Completed`)
 - **Distinct ID** — Mixpanel's identifier for the user who performed the action
 - **Timestamp** — when it happened (auto-set by SDKs; must be set manually in server-side tracking)
 
@@ -1057,9 +1057,9 @@ Event properties are **point-in-time attributes** that describe the event as it 
 
 | Type | Use Case | Example |
 |---|---|---|
-| `String` | Text categories, names, labels | `plan_type = "pro"`, `button_name = "checkout"` |
-| `Numeric` | Quantities, prices, scores | `price = 29.99`, `items_in_cart = 3` |
-| `Boolean` | Binary flags | `is_first_purchase = true` |
+| `String` | Text categories, names, labels | `Plan Type = "pro"`, `Button Name = "checkout"` |
+| `Numeric` | Quantities, prices, scores | `Price = 29.99`, `Items In Cart = 3` |
+| `Boolean` | Binary flags | `Is First Purchase = true` |
 | `Date` | ISO 8601 datetime strings | `delivery_date = "2026-03-15T00:00:00"` |
 | `List` | Arrays of values | `tags = ["mobile", "checkout", "upsell"]` |
 | `Object` | Nested key-value pairs | `experiments = {"onboarding_v2": "control"}` |
@@ -1074,7 +1074,7 @@ Event properties are **point-in-time attributes** that describe the event as it 
 User Profiles are **mutable** — they represent the user's current state and can be updated at any time. They are stored in a separate table from events and joined at query time via the Distinct ID.
 
 **Key implications:**
-- All events join to the **latest** state of a User Profile. If a user upgrades from Free to Pro, their historical events will now appear associated with a Pro user in reports. If you need to analyze behavior relative to the plan the user was on *at the time*, track `plan_type` as an **event property** too.
+- All events join to the **latest** state of a User Profile. If a user upgrades from Free to Pro, their historical events will now appear associated with a Pro user in reports. If you need to analyze behavior relative to the plan the user was on *at the time*, track `Plan Type` as an **event property** too.
 - User Profiles join retroactively. You can start tracking events before you set up profiles — they'll join correctly as long as the Distinct ID matches.
 - **Only create profiles for identified (logged-in) users.** Anonymous users should not have profiles. Wait until after `.identify()` is called.
 
@@ -1097,7 +1097,7 @@ Use super properties for context that applies to all or almost all events:
 - `app_version`
 - `platform` (web / ios / android)
 - `user_id` (for troubleshooting)
-- `plan_type` (current plan at time of event)
+- `Plan Type` (current plan at time of event)
 - `experiment_group` (for A/B test context)
 
 Super properties are stored in browser local storage (or device storage on mobile) and persist across sessions. Update them when the underlying value changes (e.g., after a plan upgrade).
@@ -1186,9 +1186,9 @@ mixpanel.track("Report Generated", {
 
 Before designing a comprehensive tracking plan, start with just two events. This gets data flowing quickly and builds momentum.
 
-**Event 1: `sign_up_completed`** (or equivalent onboarding completion event)
+**Event 1: `Sign Up Completed`** (or equivalent onboarding completion event)
 - Answers: "How many new users am I acquiring per day/week/month?"
-- Recommended properties: `sign_up_method` (email/google/apple), `referral_source`, `platform`
+- Recommended properties: `Sign Up Method` (email/google/apple), `Referral Source`, `Platform`
 
 **Event 2: Your Value Moment** (identified in Phase 1)
 - Answers: "How many users are experiencing value in my product? Are they coming back for it?"
@@ -1230,53 +1230,63 @@ Searched for "Nike"   → create one "Search Performed" event with query propert
 
 **Right level of granularity — aim for:**
 ```
-add_to_cart            → with properties: item_name, item_category, item_price, quantity
-search_performed       → with properties: query, result_count, filters_applied
-checkout_completed     → with properties: order_total, item_count, payment_method, coupon_used
+Add To Cart            → with properties: Item Name, Item Category, Item Price, Quantity
+Search Performed       → with properties: Query, Result Count, Filters Applied
+Checkout Completed     → with properties: Order Total, Item Count, Payment Method, Coupon Used
 ```
 
 **The test:** Can you answer your top business questions using this event + its properties, without needing to create a dozen filter conditions? If yes, the granularity is right.
 
 ### Naming Conventions (Non-Negotiable)
 
-**Mixpanel is case-sensitive.** `sign_up_completed`, `Sign_Up_Completed`, and `SignUpCompleted` are three different events.
+**Mixpanel is case-sensitive.** `Sign Up Completed`, `sign_up_completed`, and `SignUpCompleted` are three different events.
 
-Adopt **snake_case** for everything — event names, property names, and property values — and enforce it from day one. Mixing conventions makes data impossible to use reliably.
+Pick one convention and enforce it from day one. Mixing conventions makes data impossible to use reliably. **Default recommendation: Title Case (Start Case)** for event and property names — this is what Mixpanel's own demo data uses and aligns with the Data Standards UI.
 
-**Event name format:** `object_verb` (noun first, then action)
+If the project already has tracking in place, detect the existing convention and match it (see § Adding Events to an Existing Project).
 
-```
-✅ sign_up_completed
-✅ checkout_initiated
-✅ video_played
-✅ report_generated
-✅ account_deleted
-
-❌ SignupCompleted     (wrong case format)
-❌ completed_sign_up   (verb first — inconsistent with other events)
-❌ btn_checkout_click  (abbreviations, platform-specific jargon)
-❌ $purchase           (reserved prefix)
-❌ mp_checkout         (reserved prefix)
-```
-
-**Property name format:** `snake_case`, descriptive, no abbreviations
+**Event name format:** Object Verb (noun first, then action)
 
 ```
-✅ payment_method
-✅ item_category
-✅ plan_type
-✅ is_first_purchase
+✅ Sign Up Completed      (Title Case — default)
+✅ Checkout Initiated
+✅ Video Played
+✅ Report Generated
+✅ Account Deleted
 
-❌ pmtMethod          (camelCase, abbreviation)
-❌ cat                 (unclear abbreviation)
-❌ $plan               (reserved prefix)
+Also acceptable (if used consistently):
+✅ sign_up_completed      (snake_case)
+✅ signUpCompleted        (camelCase)
+✅ SignUpCompleted        (PascalCase)
+
+❌ completed_sign_up      (verb first — inconsistent structure)
+❌ Btn Checkout Click     (abbreviations, platform-specific jargon)
+❌ $purchase              (reserved prefix)
+❌ mp_checkout            (reserved prefix)
+```
+
+**Property name format:** Title Case, descriptive, no abbreviations (default)
+
+```
+✅ Payment Method
+✅ Item Category
+✅ Plan Type
+✅ Is First Purchase
+
+Also acceptable (match project convention):
+✅ payment_method         (snake_case)
+✅ paymentMethod          (camelCase)
+
+❌ pmtMethod              (abbreviation)
+❌ cat                    (unclear abbreviation)
+❌ $plan                  (reserved prefix)
 ```
 
 **Property value format:** lowercase strings, consistent across all events
 
 ```
-✅ plan_type = "free" | "pro" | "enterprise"
-❌ plan_type = "Free" | "PRO" | "Enterprise"   (inconsistent casing → three separate values in Mixpanel)
+✅ Plan Type = "free" | "pro" | "enterprise"
+❌ Plan Type = "Free" | "PRO" | "Enterprise"   (inconsistent casing → three separate values in Mixpanel)
 ```
 
 ### Avoid Dynamic Event or Property Names
@@ -1288,9 +1298,9 @@ Never construct event names or property names dynamically at runtime.
 mixpanel.track(`Purchase_${itemName}_${date}`);
 
 // ✅ GOOD — one event, properties carry the variation
-mixpanel.track("purchase_completed", {
-  item_name: itemName,
-  purchase_date: date
+mixpanel.track("Purchase Completed", {
+  "Item Name": itemName,
+  "Purchase Date": date
 });
 ```
 
@@ -1302,20 +1312,20 @@ Do not send null, empty string, `"N/A"`, or `"-"` as property values. If a prope
 
 ```javascript
 // ❌ BAD
-mixpanel.track("checkout_completed", {
-  coupon_code: null,
-  gift_wrap: ""
+mixpanel.track("Checkout Completed", {
+  "Coupon Code": null,
+  "Gift Wrap": ""
 });
 
 // ✅ GOOD — only send properties that have real values
 const props = {
-  order_total: 49.99,
-  item_count: 2,
-  payment_method: "credit_card"
+  "Order Total": 49.99,
+  "Item Count": 2,
+  "Payment Method": "credit_card"
 };
-if (couponApplied) props.coupon_code = couponCode;
-if (giftWrapSelected) props.gift_wrap = true;
-mixpanel.track("checkout_completed", props);
+if (couponApplied) props["Coupon Code"] = couponCode;
+if (giftWrapSelected) props["Gift Wrap"] = true;
+mixpanel.track("Checkout Completed", props);
 ```
 
 ### Adding Events to an Existing Project (Extending the Tracking Plan)
@@ -1324,10 +1334,10 @@ When adding new events to a project that already has tracking (e.g. after greenf
 
 **Before designing a new event:**
 
-1. **Check for similar events** — In Lexicon or the project's event list, search for events that might already represent this action. If a similar event exists, consider extending it with a new property rather than creating a new event (e.g. add `checkout_surface` to `checkout_completed` instead of creating `checkout_completed_mobile`).
-2. **Reuse property names** — Look at properties on related events. If `plan_type`, `payment_method`, or `referral_source` already exist with consistent naming, use those exact names. Do not introduce `planType`, `subscription_type`, or other variants.
-3. **Reuse enum-like values** — For properties that have established value sets (e.g. `plan_type` = "free" | "pro"), match existing values. Check Lexicon or Reports for current property values so new tracking doesn't create duplicate value variants (e.g. "Free" vs "free").
-4. **Match naming conventions** — The project may use a consistent style (e.g. `snake_case` event names, bracket-prefix, or title case). Match whatever convention is already in use so new events don't stand out as inconsistent.
+1. **Check for similar events** — In Lexicon or the project's event list, search for events that might already represent this action. If a similar event exists, consider extending it with a new property rather than creating a new event (e.g. add `Checkout Surface` to `Checkout Completed` instead of creating `Checkout Completed Mobile`).
+2. **Reuse property names** — Look at properties on related events. If `Plan Type`, `Payment Method`, or `Referral Source` already exist with consistent naming, use those exact names. Do not introduce variants with different casing or phrasing.
+3. **Reuse enum-like values** — For properties that have established value sets (e.g. `Plan Type` = "free" | "pro"), match existing values. Check Lexicon or Reports for current property values so new tracking doesn't create duplicate value variants (e.g. "Free" vs "free").
+4. **Match naming conventions** — Detect the naming convention already in use (Title Case, snake_case, camelCase, etc.) and match it exactly. Confirm the detected convention with the user before proceeding. Only default to Title Case if no existing tracking exists.
 
 If you have access to tools that query the project (e.g. list events by keyword, list property names for an event, list property values), use them to ground the design. Otherwise, direct the customer to Lexicon and Reports to list existing events and property names for the relevant domain before finalizing the new event spec.
 
@@ -1337,40 +1347,40 @@ Use the customer's vertical (from Phase 0) to make recommendations concrete:
 
 **SaaS**
 ```
-sign_up_completed        plan_type, sign_up_method, referral_source
-onboarding_step_completed step_name, step_number, time_spent_seconds
-project_created          project_type, template_used
-invite_sent              invitee_role, invite_method
-feature_used             feature_name, surface, plan_type
-subscription_upgraded    from_plan, to_plan, trigger_surface
+Sign Up Completed          Plan Type, Sign Up Method, Referral Source
+Onboarding Step Completed  Step Name, Step Number, Time Spent Seconds
+Project Created            Project Type, Template Used
+Invite Sent                Invitee Role, Invite Method
+Feature Used               Feature Name, Surface, Plan Type
+Subscription Upgraded      From Plan, To Plan, Trigger Surface
 ```
 
 **E-Commerce**
 ```
-sign_up_completed        sign_up_method, referral_source
-product_viewed           product_id, product_name, category, price
-add_to_cart              product_id, product_name, category, price, quantity
-checkout_initiated       cart_total, item_count
-checkout_completed       order_id, order_total, item_count, payment_method, is_first_purchase
-review_submitted         product_id, rating, has_text_review
+Sign Up Completed          Sign Up Method, Referral Source
+Product Viewed             Product ID, Product Name, Category, Price
+Add To Cart                Product ID, Product Name, Category, Price, Quantity
+Checkout Initiated         Cart Total, Item Count
+Checkout Completed         Order ID, Order Total, Item Count, Payment Method, Is First Purchase
+Review Submitted           Product ID, Rating, Has Text Review
 ```
 
 **Media / Content**
 ```
-sign_up_completed        sign_up_method, referral_source, content_viewed_before_signup
-content_viewed           content_id, content_type, category, author
-content_completed        content_id, content_type, completion_percentage, duration_seconds
-content_shared           content_id, share_method, destination_platform
-subscription_started     plan_type, trial_started
+Sign Up Completed          Sign Up Method, Referral Source, Content Viewed Before Signup
+Content Viewed             Content ID, Content Type, Category, Author
+Content Completed          Content ID, Content Type, Completion Percentage, Duration Seconds
+Content Shared             Content ID, Share Method, Destination Platform
+Subscription Started       Plan Type, Trial Started
 ```
 
 **Fintech**
 ```
-sign_up_completed        sign_up_method, referral_source
-account_linked           account_type, institution_name
-transaction_viewed       transaction_id, transaction_type, amount
-report_generated         report_type, date_range, export_format
-alert_set                alert_type, threshold_amount
+Sign Up Completed          Sign Up Method, Referral Source
+Account Linked             Account Type, Institution Name
+Transaction Viewed         Transaction ID, Transaction Type, Amount
+Report Generated           Report Type, Date Range, Export Format
+Alert Set                  Alert Type, Threshold Amount
 ```
 
 ### Tracking Plan Templates
@@ -1476,16 +1486,18 @@ If you have access to a segmentation or query tool (e.g. Run-Segmentation-Query,
 
 #### JavaScript (Browser)
 
-**Install via npm (recommended):**
+**Install via CDN (paste before closing `</head>` tag):**
+
+```html
+<script type="text/javascript">
+  (function (f, b) { if (!b.__SV) { var e, g, i, h; window.mixpanel = b; b._i = []; b.init = function (e, f, c) { function g(a, d) { var b = d.split("."); 2 == b.length && ((a = a[b[0]]), (d = b[1])); a[d] = function () { a.push([d].concat(Array.prototype.slice.call(arguments, 0))); }; } var a = b; "undefined" !== typeof c ? (a = b[c] = []) : (c = "mixpanel"); a.people = a.people || []; a.toString = function (a) { var d = "mixpanel"; "mixpanel" !== c && (d += "." + c); a || (d += " (stub)"); return d; }; a.people.toString = function () { return a.toString(1) + ".people (stub)"; }; i = "disable time_event track track_pageview track_links track_forms track_with_groups add_group set_group remove_group register register_once alias unregister identify name_tag set_config reset opt_in_tracking opt_out_tracking has_opted_in_tracking has_opted_out_tracking clear_opt_in_out_tracking start_batch_senders people.set people.set_once people.unset people.increment people.append people.union people.track_charge people.clear_charges people.delete_user people.remove".split(" "); for (h = 0; h < i.length; h++) g(a, i[h]); var j = "set set_once union unset remove delete".split(" "); a.get_group = function () { function b(c) { d[c] = function () { call2_args = arguments; call2 = [c].concat(Array.prototype.slice.call(call2_args, 0)); a.push([e, call2]); }; } for ( var d = {}, e = ["get_group"].concat(Array.prototype.slice.call(arguments, 0)), c = 0; c < j.length; c++) b(j[c]); return d; }; b._i.push([e, f, c]); }; b.__SV = 1.2; e = f.createElement("script"); e.type = "text/javascript"; e.async = !0; e.src = "//cdn.mxpnl.com/libs/mixpanel-2-latest.min.js"; g = f.getElementsByTagName("script")[0]; g.parentNode.insertBefore(e, g); } })(document, window.mixpanel || []);
+</script>
+```
+
+**Or install via npm:**
 
 ```bash
 npm install mixpanel-browser
-```
-
-**Or install via CDN (paste before closing `</head>` tag):**
-
-```html
-<script src="https://cdn.mxpnl.com/libs/mixpanel-2-latest.min.js"></script>
 ```
 
 **Initialize:**
@@ -1507,19 +1519,19 @@ mixpanel.init('YOUR_PROJECT_TOKEN', {
 mixpanel.register({
   platform: 'web',
   app_version: '2.4.1',
-  plan_type: user.plan   // set after login
+  'Plan Type': user.plan   // set after login
 });
 ```
 
 **Track an Event:**
 
 ```javascript
-mixpanel.track('checkout_completed', {
-  order_id: 'ORD-9821',
-  order_total: 89.97,
-  item_count: 3,
-  payment_method: 'credit_card',
-  is_first_purchase: true
+mixpanel.track('Checkout Completed', {
+  'Order ID': 'ORD-9821',
+  'Order Total': 89.97,
+  'Item Count': 3,
+  'Payment Method': 'credit_card',
+  'Is First Purchase': true
 });
 ```
 
@@ -1530,14 +1542,14 @@ mixpanel.people.set({
   $name: user.fullName,
   $email: user.email,
   $created: user.createdAt,
-  plan_type: user.plan,
-  company: user.company
+  'Plan Type': user.plan,
+  'Company': user.company
 });
 
 // Use set_once for properties that should never be overwritten
 mixpanel.people.set_once({
-  first_sign_up_date: new Date().toISOString(),
-  acquisition_source: utmSource
+  'First Sign Up Date': new Date().toISOString(),
+  'Acquisition Source': utmSource
 });
 ```
 
@@ -1546,8 +1558,8 @@ mixpanel.people.set_once({
 ```javascript
 // On successful login or signup
 mixpanel.identify(user.id);  // use your database user ID, not email
-mixpanel.people.set({ $email: user.email, $name: user.name, plan_type: user.plan });
-mixpanel.register({ plan_type: user.plan }); // also set as super property
+mixpanel.people.set({ $email: user.email, $name: user.name, 'Plan Type': user.plan });
+mixpanel.register({ 'Plan Type': user.plan }); // also set as super property
 ```
 
 **Reset on Logout:**
@@ -1556,13 +1568,6 @@ mixpanel.register({ plan_type: user.plan }); // also set as super property
 // On logout — clears local storage and generates a new $device_id
 mixpanel.reset();
 ```
-
-**Deprecated Methods — Do Not Use:**
-
-| Method | Status | What to do instead |
-|---|---|---|
-| `mixpanel.alias()` | **Never call.** The pattern `get_distinct_id() → identify() → alias()` is wrong under all ID merge modes. Under Simplified API, `identify()` alone bridges anonymous and identified sessions. Under Original ID Merge, `identify()` alone is also correct — `alias()` is not part of the customer-facing identity flow and causes silent identity fragmentation if called. | `mixpanel.identify(user.id)` only — no `alias()`, no `get_distinct_id()` for identity purposes |
-| `mixpanel.people.track_charge()` | Deprecated and non-functional — prints a console error and does nothing. | Use Mixpanel's built-in revenue analysis or track revenue as a standard event property. |
 
 ---
 
@@ -1587,12 +1592,12 @@ mp = Mixpanel('YOUR_PROJECT_TOKEN')
 ```python
 # distinct_id should be your user's database ID for identified users,
 # or the $device_id (anonymous ID) for pre-login events
-mp.track(user_id, 'checkout_completed', {
-    'order_id': 'ORD-9821',
-    'order_total': 89.97,
-    'item_count': 3,
-    'payment_method': 'credit_card',
-    'is_first_purchase': True,
+mp.track(user_id, 'Checkout Completed', {
+    'Order ID': 'ORD-9821',
+    'Order Total': 89.97,
+    'Item Count': 3,
+    'Payment Method': 'credit_card',
+    'Is First Purchase': True,
     'ip': request.remote_addr  # forward client IP for geolocation
 })
 ```
@@ -1612,10 +1617,10 @@ mp.track('', 'page_viewed', {
 **Track a Post-Login Event (linking anonymous to identified):**
 
 ```python
-mp.track('', 'sign_up_completed', {
+mp.track('', 'Sign Up Completed', {
     '$device_id': session.get('anonymous_id'),  # the pre-login ID
     '$user_id': str(user.id),                   # the authenticated ID
-    'sign_up_method': 'google',
+    'Sign Up Method': 'google',
     'ip': request.remote_addr
 })
 # After this call, Mixpanel merges the anonymous and authenticated sessions
@@ -1628,7 +1633,7 @@ mp.people_set(str(user.id), {
     '$name': user.full_name,
     '$email': user.email,
     '$created': user.created_at.isoformat(),
-    'plan_type': user.plan,
+    'Plan Type': user.plan,
     '$ip': 0  # set to 0 to prevent overwriting geolocation with server IP
 })
 ```
@@ -1662,13 +1667,13 @@ const mp = Mixpanel.init('YOUR_PROJECT_TOKEN');
 **Track an Event:**
 
 ```javascript
-mp.track('checkout_completed', {
+mp.track('Checkout Completed', {
   distinct_id: user.id,
-  order_id: 'ORD-9821',
-  order_total: 89.97,
-  item_count: 3,
-  payment_method: 'credit_card',
-  is_first_purchase: true,
+  'Order ID': 'ORD-9821',
+  'Order Total': 89.97,
+  'Item Count': 3,
+  'Payment Method': 'credit_card',
+  'Is First Purchase': true,
   ip: req.ip
 });
 ```
@@ -1686,10 +1691,10 @@ mp.track('page_viewed', {
 **Link Anonymous to Authenticated (on login/signup):**
 
 ```javascript
-mp.track('sign_up_completed', {
+mp.track('Sign Up Completed', {
   $device_id: req.cookies.anonymous_id,
   $user_id: String(user.id),
-  sign_up_method: 'email',
+  'Sign Up Method': 'email',
   ip: req.ip
 });
 ```
@@ -1701,7 +1706,7 @@ mp.people.set(String(user.id), {
   $name: user.fullName,
   $email: user.email,
   $created: user.createdAt.toISOString(),
-  plan_type: user.plan,
+  'Plan Type': user.plan,
   $ip: 0
 });
 ```
@@ -1753,7 +1758,7 @@ mixpanel.identify(user.id);
 mixpanel.getPeople().set({
   $name: user.fullName,
   $email: user.email,
-  plan_type: user.plan
+  'Plan Type': user.plan
 });
 ```
 
@@ -1792,12 +1797,12 @@ Mixpanel.mainInstance().registerSuperProperties([
 **Track an Event:**
 
 ```swift
-Mixpanel.mainInstance().track(event: "checkout_completed", properties: [
-    "order_id": "ORD-9821",
-    "order_total": 89.97,
-    "item_count": 3,
-    "payment_method": "credit_card",
-    "is_first_purchase": true
+Mixpanel.mainInstance().track(event: "Checkout Completed", properties: [
+    "Order ID": "ORD-9821",
+    "Order Total": 89.97,
+    "Item Count": 3,
+    "Payment Method": "credit_card",
+    "Is First Purchase": true
 ])
 ```
 
@@ -1808,7 +1813,7 @@ Mixpanel.mainInstance().identify(distinctId: user.id)
 Mixpanel.mainInstance().people.set(properties: [
     "$name": user.fullName,
     "$email": user.email,
-    "plan_type": user.plan
+    "Plan Type": user.plan
 ])
 ```
 
@@ -1856,11 +1861,11 @@ mixpanel.registerSuperProperties(superProps)
 
 ```kotlin
 val props = JSONObject()
-props.put("order_id", "ORD-9821")
-props.put("order_total", 89.97)
-props.put("item_count", 3)
-props.put("payment_method", "credit_card")
-mixpanel.track("checkout_completed", props)
+props.put("Order ID", "ORD-9821")
+props.put("Order Total", 89.97)
+props.put("Item Count", 3)
+props.put("Payment Method", "credit_card")
+mixpanel.track("Checkout Completed", props)
 ```
 
 **Identify on Login:**
@@ -1869,7 +1874,7 @@ mixpanel.track("checkout_completed", props)
 mixpanel.identify(user.id)
 mixpanel.people.set("\$name", user.fullName)
 mixpanel.people.set("\$email", user.email)
-mixpanel.people.set("plan_type", user.plan)
+mixpanel.people.set("Plan Type", user.plan)
 ```
 
 **Reset on Logout:**
@@ -1922,12 +1927,12 @@ mixpanel.registerSuperProperties({
 **Track an Event:**
 
 ```dart
-mixpanel.track('checkout_completed', properties: {
-  'order_id': 'ORD-9821',
-  'order_total': 89.97,
-  'item_count': 3,
-  'payment_method': 'credit_card',
-  'is_first_purchase': true,
+mixpanel.track('Checkout Completed', properties: {
+  'Order ID': 'ORD-9821',
+  'Order Total': 89.97,
+  'Item Count': 3,
+  'Payment Method': 'credit_card',
+  'Is First Purchase': true,
 });
 ```
 
@@ -1937,7 +1942,7 @@ mixpanel.track('checkout_completed', properties: {
 mixpanel.identify(user.id);
 mixpanel.getPeople().set('\$name', user.fullName);
 mixpanel.getPeople().set('\$email', user.email);
-mixpanel.getPeople().set('plan_type', user.plan);
+mixpanel.getPeople().set('Plan Type', user.plan);
 ```
 
 **Set Profile Properties Only Once:**
@@ -1965,16 +1970,16 @@ curl --request POST \
   --url https://api.mixpanel.com/track \
   --header 'Content-Type: application/json' \
   --data '[{
-    "event": "checkout_completed",
+    "event": "Checkout Completed",
     "properties": {
       "token": "YOUR_PROJECT_TOKEN",
       "distinct_id": "user-12345",
       "time": 1740000000,
       "$insert_id": "unique-dedup-key-abc123",
-      "order_id": "ORD-9821",
-      "order_total": 89.97,
-      "item_count": 3,
-      "payment_method": "credit_card"
+      "Order ID": "ORD-9821",
+      "Order Total": 89.97,
+      "Item Count": 3,
+      "Payment Method": "credit_card"
     }
   }]'
 ```
@@ -2002,7 +2007,7 @@ curl --request POST \
     "$set": {
       "$name": "Alice Smith",
       "$email": "alice@example.com",
-      "plan_type": "pro",
+      "Plan Type": "pro",
       "$created": "2026-02-20T10:00:00"
     }
   }]'
@@ -2038,7 +2043,7 @@ function onConsentDeclined() {
 
 // Check consent state before firing events programmatically
 if (mixpanel.has_opted_in_tracking()) {
-  mixpanel.track('checkout_completed', { /* ... */ });
+  mixpanel.track('Checkout Completed', { /* ... */ });
 }
 ```
 
@@ -2153,26 +2158,26 @@ async function handleSignup(user) {
     $name: user.fullName,
     $email: user.email,
     $created: new Date().toISOString(),
-    plan_type: 'free'
+    'Plan Type': 'free'
   });
   mixpanel.people.set_once({
-    first_sign_up_date: new Date().toISOString(),
-    acquisition_source: utmSource
+    'First Sign Up Date': new Date().toISOString(),
+    'Acquisition Source': utmSource
   });
 
   // 3. Update super properties
-  mixpanel.register({ plan_type: 'free', user_id: user.id });
+  mixpanel.register({ 'Plan Type': 'free', user_id: user.id });
 
   // 4. Track the signup event (comes AFTER identify so it's attributed correctly)
-  mixpanel.track('sign_up_completed', {
-    sign_up_method: user.authMethod,
-    referral_source: utmSource
+  mixpanel.track('Sign Up Completed', {
+    'Sign Up Method': user.authMethod,
+    'Referral Source': utmSource
   });
 }
 
 // User logs out
 function handleLogout() {
-  mixpanel.track('session_ended');
+  mixpanel.track('Session Ended');
   mixpanel.reset();  // clears storage, generates new $device_id
 }
 
@@ -2180,7 +2185,7 @@ function handleLogout() {
 function onAppLoad() {
   if (currentUser) {
     mixpanel.identify(currentUser.id);  // re-establishes the link
-    mixpanel.register({ plan_type: currentUser.plan });
+    mixpanel.register({ 'Plan Type': currentUser.plan });
   }
 }
 ```
@@ -2310,7 +2315,7 @@ For every event you ship, immediately add to Lexicon using this structured check
 | **Description** | What the value represents; if enum-like, list valid values |
 | **Sensitive** | Set to true if the property contains PII or other sensitive data (so it can be restricted in exports or reports) |
 
-Example Lexicon description for `checkout_completed`:
+Example Lexicon description for `Checkout Completed`:
 > "Fires when a user successfully completes a purchase and the order is confirmed. Includes the order total, item count, payment method, and whether this is the user's first purchase. Triggered server-side by the order confirmation webhook."
 
 Descriptions in Lexicon are visible to everyone on the team and appear directly in the report builder. They prevent the constant "what does this event mean?" questions that slow down analysis.
@@ -2322,9 +2327,9 @@ Mixpanel's **Data Standards** feature lets you define formatting rules that all 
 Enable and configure at: **Project Settings → Data Standards**
 
 Recommended rules to set:
-- All event names must use `snake_case`
+- All event names must use a consistent naming convention (default: Title Case / Start Case)
 - All event names must have a description before they appear in reports
-- All property names must use `snake_case`
+- All property names must use a consistent naming convention (default: Title Case / Start Case)
 
 ### Event Approval
 
@@ -2402,7 +2407,7 @@ The tracking plan should never be considered "done." Every product release may a
 Recommended storage: Google Sheets (using the Mixpanel template), Notion database, or Confluence page.
 
 Required columns:
-- Event Name (raw, snake_case)
+- Event Name (raw, using project's naming convention)
 - Display Name (human-readable)
 - Trigger (what user action or system event causes this)
 - Properties (name, data type, example value, required/optional)
@@ -2458,4 +2463,4 @@ Required columns:
 
 ---
 
-*This document was synthesized from Mixpanel's official documentation, Mixpanel onboarding learning path materials, and internal tracking plan best practice guides. It reflects Mixpanel's recommended practices as of February 2026.*
+*This document was synthesized from Mixpanel's official documentation, Mixpanel onboarding learning path materials, and internal tracking plan best practice guides. It reflects Mixpanel's recommended practices as of March 2026.*
